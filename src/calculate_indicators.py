@@ -1,17 +1,17 @@
 import numba as nb
 import numpy as np
 from utils.numba_utils import numba_wrapper
-from utils.data_types import default_types, get_signature_child
-from src.indicators.sma import calculate_sma_wrapper
-from src.indicators.bbands import calculate_bbands_wrapper
-
-_dict = {"sma_period": 0}
+from utils.data_types import default_types, get_params_child_signature
+from src.indicators.sma import calculate_sma_wrapper, sma_id, sma2_id
+from src.indicators.bbands import calculate_bbands_wrapper, bbands_id
 
 
 def calc_indicators(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
-    signature = get_signature_child(nb_int_type, nb_float_type)
+    params_child_signature = get_params_child_signature(
+        nb_int_type, nb_float_type)
+    signature = nb.void(params_child_signature)
 
     _calculate_sma_wrapper = calculate_sma_wrapper(mode,
                                                    cache=cache,
@@ -22,26 +22,35 @@ def calc_indicators(mode, cache=True, dtype_dict=default_types):
                                                          dtype_dict=dtype_dict)
 
     def _calc_indicators(params_child):
-        (micro_data, micro_input_child, macro_data, macro_input_child,
-         backtest_input_child) = params_child
+        print("INSIDE _calc_indicators: Function started.")
 
-        (micro_tohlcv, micro_tohlcv_smooth) = micro_data
-        (micro_indicator_params_child, micro_signal_params_child,
-         micro_indicator_result_child,
-         micro_signal_result_child) = micro_input_child
-        (macro_tohlcv, macro_tohlcv_smooth) = macro_data
-        (macro_indicator_params_child, macro_signal_params_child,
-         macro_indicator_result_child,
-         macro_signal_result_child) = macro_input_child
+        (data_args, indicator_args, signal_args, backtest_args) = params_child
+        (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2) = data_args
+        (indicator_params_child, indicator_params2_child, indicator_enabled,
+         indicator_enabled2, indicator_result_child,
+         indicator_result2_child) = indicator_args
+        (signal_params, signal_result_child) = signal_args
         (backtest_params_child, backtest_result_child,
-         temp_arrays_child) = backtest_input_child
+         temp_arrays_child) = backtest_args
 
-        _calculate_sma_wrapper(micro_tohlcv, micro_indicator_params_child,
-                               micro_indicator_result_child)
-        result = micro_indicator_result_child[:, 0]
+        (sma_params, sma2_params, bbands_params) = indicator_params_child
+        (sma_params2, sma2_params2, bbands_params2) = indicator_params2_child
+        (sma_result, sma2_result, bbands_result) = indicator_result_child
+        (sma_result2, sma2_result2, bbands_result2) = indicator_result2_child
+        if indicator_enabled[sma_id] == 1:
 
-        _calculate_bbands_wrapper(micro_tohlcv, micro_indicator_params_child,
-                                  micro_indicator_result_child)
+            _calculate_sma_wrapper(tohlcv, indicator_params_child,
+                                   indicator_result_child, sma_id)
+
+        if indicator_enabled[sma2_id] == 1:
+
+            _calculate_sma_wrapper(tohlcv, indicator_params_child,
+                                   indicator_result_child, sma2_id)
+
+        if indicator_enabled[bbands_id] == 1:
+
+            _calculate_bbands_wrapper(tohlcv, indicator_params_child,
+                                      indicator_result_child, bbands_id)
 
     return numba_wrapper(mode, signature=signature,
                          cache_enabled=cache)(_calc_indicators)

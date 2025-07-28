@@ -4,12 +4,14 @@ import numpy as np
 _compiled_functions_cache = {}
 
 
-def numba_wrapper(mode: str,
-                  signature: tuple,
-                  cache_enabled: bool,
-                  parallel: bool = False,
-                  max_registers: int | None = None,
-                  use_global_cache: bool = True):
+def numba_wrapper(
+        mode: str,
+        signature: tuple | None = None,  # 签名现在可以为 None，因为 normal 模式不需要
+        cache_enabled: bool = False,  # 默认改为 False，按需开启
+        parallel: bool = False,
+        inline: str = "never",
+        max_registers: int | None = None,
+        use_global_cache: bool = True):
     """
     根据指定的模式返回一个 Numba 装饰器工厂。
     增加了全局缓存机制，避免重复编译/获取已缓存函数时的开销。
@@ -32,6 +34,7 @@ def numba_wrapper(mode: str,
     """
 
     def decorator(func):
+
         # 构建缓存键的基础元素
         key_elements = [
             func.__qualname__,
@@ -53,20 +56,29 @@ def numba_wrapper(mode: str,
             return _compiled_functions_cache[cache_key]
 
         # 如果不在全局缓存中，则执行 Numba 编译
-        if mode == 'jit':
+        if mode == "normal":
+            compiled_func = jit(signature,
+                                nopython=False,
+                                parallel=parallel,
+                                inline=inline,
+                                cache=cache_enabled)(func)
+        elif mode == 'jit':
             compiled_func = jit(signature,
                                 nopython=True,
                                 parallel=parallel,
+                                inline=inline,
                                 cache=cache_enabled)(func)
         elif mode == 'njit':
             compiled_func = njit(signature,
                                  parallel=parallel,
+                                 inline=inline,
                                  cache=cache_enabled)(func)
         elif mode == 'cuda':
             compiled_func = cuda.jit(
                 signature,
                 device=
                 not parallel,  # CUDA 的 parallel 参数通常是针对 CPU 后端，device=True 表示在 GPU 上运行
+                inline=inline,
                 cache=cache_enabled,
                 max_registers=max_registers)(func)
 

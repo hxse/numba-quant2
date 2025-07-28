@@ -1,18 +1,22 @@
 import numba as nb
 import numpy as np
 from utils.numba_utils import numba_wrapper
-from utils.data_types import default_types, get_signature_child
+from utils.data_types import default_types
 
 sma_id = 0
+sma2_id = 1
 
 sma_spec = {
-    "id": sma_id,  # 指标id，不能跟其他指标重复。
-    "name": "sma",  # 指标名
-    "result_name": ["sma"],  # 结果数组列名
-    "param_count": 1,  # 需要多少参数。
-    "result_count": 1,  # 需要多少结果数组。
-    "temp_count": 0,  # 该指标需要多少临时数组。
+    "id": sma_id,
+    "name": "sma",
+    "suffix": "",
+    "result_name": ["sma"],
+    "default_params": [14],
+    "param_count": 1,
+    "result_count": 1,
+    "temp_count": 0,
 }
+sma2_spec = {**sma_spec, "id": sma2_id, "suffix": "2"}
 
 
 def calculate_sma(mode, cache=True, dtype_dict=default_types):
@@ -20,18 +24,27 @@ def calculate_sma(mode, cache=True, dtype_dict=default_types):
     nb_float_type = dtype_dict["nb"]["float"]
     signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type[:])
 
-    def _calculate_sma(close, sma_period, sma_result):
-        # 确保结果数组的长度与输入数据数组相同
-        # 对于前 period - 1 个元素，填充 np.nan
-        for i in range(min(sma_period - 1, len(close))):  # 避免数据长度不足越界
+    def _calculate_sma(close, period, sma_result):
+        data_length = len(close)
+        result_length = len(sma_result)
+
+        # 越界检查
+        if result_length < data_length:
+            return
+
+        # 越界检查
+        if period <= 0 or data_length < period or result_length < period:
+            return
+
+        for i in range(period - 1):
             sma_result[i] = np.nan
 
-        # 从 period - 1 索引开始计算 SMA
-        for i in range(len(close) - sma_period + 1):
+        for i in range(data_length - period + 1):
             sum_val = 0.0
-            for j in range(sma_period):
+            for j in range(period):
                 sum_val += close[i + j]
-            sma_result[i + sma_period - 1] = sum_val / sma_period
+
+            sma_result[i + period - 1] = sum_val / period
 
     return numba_wrapper(mode, signature=signature,
                          cache_enabled=cache)(_calculate_sma)
@@ -40,24 +53,27 @@ def calculate_sma(mode, cache=True, dtype_dict=default_types):
 def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
-    signature = nb.void(nb_float_type[:, :], nb_float_type[:],
-                        nb_float_type[:, :])
+    signature = nb.void(
+        nb_float_type[:, :],  # tohlcv
+        nb.types.Tuple((nb_float_type[:], nb_float_type[:],
+                        nb_float_type[:])),  # indicator_params_child
+        nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
+                        nb_float_type[:, :])),  # indicator_result_child
+        nb_int_type  # _id
+    )
 
     _calculate_sma = calculate_sma(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _calculate_sma_wrapper(micro_tohlcv, micro_indicator_params_child,
-                               micro_indicator_result_child):
+    def _calculate_sma_wrapper(tohlcv, indicator_params_child,
+                               indicator_result_child, _id):
 
-        time = micro_tohlcv[:, 0]
-        open = micro_tohlcv[:, 1]
-        high = micro_tohlcv[:, 2]
-        low = micro_tohlcv[:, 3]
-        close = micro_tohlcv[:, 4]
-        volume = micro_tohlcv[:, 5]
+        close = tohlcv[:, 4].copy()
 
-        sma_period = micro_indicator_params_child[sma_period_idx]
+        sma_indicator_params_child = indicator_params_child[_id]
+        sma_indicator_result_child = indicator_result_child[_id]
 
-        sma_result = micro_indicator_result_child[:, sma_result_idx]
+        sma_period = sma_indicator_params_child[0]
+        sma_result = sma_indicator_result_child[:, 0]
 
         # sma_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
         _calculate_sma(close, sma_period, sma_result)
