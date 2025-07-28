@@ -6,8 +6,6 @@ root_path = next((p for p in Path(__file__).resolve().parents
 if root_path:
     sys.path.insert(0, str(root_path))
 
-from utils.data_types import get_numba_data_types
-
 import time
 
 start_time = time.time()
@@ -65,11 +63,16 @@ def run(pre_run=True,
 
         params = get_params(num=1,
                             indicator_update={
-                                sma_name: [[20]],
-                                sma2_name: [[20]],
-                                bbands_name: [[30, 3.0]]
+                                sma_name: [[14]],
+                                sma2_name: [[50]],
+                                bbands_name: [[20, 2.0]]
                             },
-                            indicator_enabled={sma_id: True},
+                            signal_params=[0, 0],
+                            indicator_enabled={
+                                sma_id: True,
+                                sma2_id: True,
+                                bbands_id: True
+                            },
                             dtype_dict=dtype_dict)
 
         print(f"\nstart task idx: {i}", "并发数量:",
@@ -78,8 +81,8 @@ def run(pre_run=True,
         start_time = time.time()
 
         mode_array = ["jit", "njit", "cuda"]
-        mode_array = ["njit"]
-        # mode_array = ["normal"]
+        # mode_array = ["njit"]
+        # mode_array = ["cuda"]
 
         for mode in mode_array:
             _func = calculate_time_wrapper if task_time else calculate
@@ -103,7 +106,8 @@ def run(pre_run=True,
             if i != 0:
                 print(f"{mode} out_arrays length:", len(backtest_result))
                 print(f"{mode} indicator_result:", indicator_result)
-                print(f"{mode} indicator_result2:", indicator_result2)
+                # print(f"{mode} indicator_result2:", indicator_result2)
+                print(f"{mode} signal_result:", signal_result)
 
         if total_time:
             print(

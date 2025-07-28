@@ -120,7 +120,7 @@ def get_indicator_enabled(update_params={}, dtype_dict=default_dtype_dict):
     return ensure_c_contiguous(params)
 
 def get_signal_params(params=[], dtype_dict=default_dtype_dict):
-    params = np.array(params, dtype=dtype_dict["np"]["float"])
+    params = np.array(params, dtype=dtype_dict["np"]["int"])
     return ensure_c_contiguous(params)
 
 

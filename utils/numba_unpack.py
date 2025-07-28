@@ -52,7 +52,7 @@ def initialize_outputs(tohlcv,
     sma2_output_dim = sma2_spec["result_count"]
     bbands_output_dim = bbands_spec["result_count"]
 
-    signal_output_dim = 10
+    signal_output_dim = 4
     backtest_output_dim = 10
     temp_output_dim = max(
         temp_num, sma_spec["temp_count"] + sma2_spec["temp_count"] +

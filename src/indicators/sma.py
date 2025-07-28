@@ -69,7 +69,7 @@ def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
     def _calculate_sma_wrapper(tohlcv, indicator_params_child,
                                indicator_result_child, _id):
 
-        close = tohlcv[:, 4].copy()
+        close = tohlcv[:, 4]
 
         sma_indicator_params_child = indicator_params_child[_id]
         sma_indicator_result_child = indicator_result_child[_id]

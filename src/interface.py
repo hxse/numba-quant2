@@ -6,7 +6,6 @@ from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工�
 from utils.time_utils import time_wrapper
 from utils.data_types import default_types
 from utils.numba_unpack import unpack_params, get_output, initialize_outputs
-import utils.filter_log
 
 
 def transform_data_recursive(data, mode='to_device'):
