@@ -6,7 +6,7 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same
 from utils.config_utils import get_params
 from src.interface import calculate
-from src.indicators.bbands import bbands_id
+from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
 
 def test_accuracy(df_data,
@@ -35,7 +35,7 @@ def test_accuracy(df_data,
 
         params = get_params(num=1,
                             indicator_update={
-                                "bbands": [params],
+                                bbands_name: [params],
                             },
                             indicator_enabled={bbands_id: True},
                             dtype_dict=dtype_dict)
@@ -67,13 +67,13 @@ def test_accuracy(df_data,
         pandas_lower = pandas_bbands[
             f"BBL_{bbands_period}_{bbands_std_mult}"].values
 
-        assert_func(middle_result, pandas_middle, "bbands",
+        assert_func(middle_result, pandas_middle, bbands_spec["ori_name"],
                     f"period {bbands_period} std_mult {bbands_std_mult}")
 
-        assert_func(upper_result, pandas_upper, "bbands",
+        assert_func(upper_result, pandas_upper, bbands_spec["ori_name"],
                     f"period {bbands_period} std_mult {bbands_std_mult}")
 
-        assert_func(lower_result, pandas_lower, "bbands",
+        assert_func(lower_result, pandas_lower, bbands_spec["ori_name"],
                     f"period {bbands_period} std_mult {bbands_std_mult}")
 
 
@@ -124,13 +124,13 @@ def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
             f"BBL_{bbands_period}_{bbands_std_mult}"].values
 
         assert_indicator_same(
-            pandas_middle_talib, pandas_middle, "bbands",
+            pandas_middle_talib, pandas_middle, bbands_spec["ori_name"],
             f"period {bbands_period} std_mult {bbands_std_mult}")
 
         assert_indicator_same(
-            pandas_upper_talib, pandas_upper, "bbands",
+            pandas_upper_talib, pandas_upper, bbands_spec["ori_name"],
             f"period {bbands_period} std_mult {bbands_std_mult}")
 
         assert_indicator_same(
-            pandas_lower_talib, pandas_lower, "bbands",
+            pandas_lower_talib, pandas_lower, bbands_spec["ori_name"],
             f"period {bbands_period} std_mult {bbands_std_mult}")

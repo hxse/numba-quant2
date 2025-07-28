@@ -1,9 +1,9 @@
-from src.indicators.sma import sma_spec, sma2_spec
-from src.indicators.bbands import bbands_spec
-
 from utils.data_loading import load_tohlcv_from_csv, convert_tohlcv_numpy
 from utils.data_types import get_numba_data_types
 import numpy as np
+
+from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
+from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
 
 def get_dtype_dict(enable64=True):
@@ -75,9 +75,9 @@ def get_indicator_params(num: int = 1,
         AssertionError: 如果 update 字典的格式不符合预期。
     """
     default_template = {
-        sma_spec["name"] + sma_spec["suffix"]: sma_spec,
-        sma2_spec["name"] + sma2_spec["suffix"]: sma2_spec,
-        bbands_spec["name"] + bbands_spec["suffix"]: bbands_spec,
+        sma_name: sma_spec,
+        sma2_name: sma2_spec,
+        bbands_name: bbands_spec,
     }
     assert indicator_count==len(default_template.keys()),f"指标数量不匹配 {indicator_count} {len(default_template.keys())}"
 

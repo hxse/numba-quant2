@@ -6,7 +6,7 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same
 from utils.config_utils import get_params
 from src.interface import calculate
-from src.indicators.sma import sma_id
+from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 
 
 def test_accuracy(df_data,
@@ -34,7 +34,7 @@ def test_accuracy(df_data,
 
         params = get_params(num=1,
                             indicator_update={
-                                "sma": [params],
+                                sma_name: [params],
                             },
                             indicator_enabled={sma_id: True},
                             dtype_dict=dtype_dict)
@@ -56,7 +56,7 @@ def test_accuracy(df_data,
                                     length=int(sma_period),
                                     talib=talib)
 
-        assert_func(sma_cpu_result, pandas_sma_results, "sma",
+        assert_func(sma_cpu_result, pandas_sma_results, sma_spec["ori_name"],
                     f"period {sma_period}")
 
 
@@ -86,5 +86,5 @@ def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
         talib_sma = ta.sma(close_series, length=int(sma_period), talib=True)
 
         # 使用 assert_indicator_same 验证两者是否相同
-        assert_indicator_same(pandas_sma, talib_sma, "sma",
+        assert_indicator_same(pandas_sma, talib_sma, sma_spec["ori_name"],
                               f"period {sma_period}")

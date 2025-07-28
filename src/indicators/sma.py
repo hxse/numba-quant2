@@ -4,19 +4,21 @@ from utils.numba_utils import numba_wrapper
 from utils.data_types import default_types
 
 sma_id = 0
+sma_name = "sma"
 sma2_id = 1
+sma2_name = "sma2"
 
 sma_spec = {
     "id": sma_id,
-    "name": "sma",
-    "suffix": "",
+    "name": sma_name,
+    "ori_name": sma_name,
     "result_name": ["sma"],
     "default_params": [14],
     "param_count": 1,
     "result_count": 1,
     "temp_count": 0,
 }
-sma2_spec = {**sma_spec, "id": sma2_id, "suffix": "2"}
+sma2_spec = {**sma_spec, "id": sma2_id, "name": sma2_name}
 
 
 def calculate_sma(mode, cache=True, dtype_dict=default_types):

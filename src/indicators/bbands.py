@@ -6,11 +6,12 @@ import math
 from .sma import calculate_sma
 
 bbands_id = 2
+bbands_name = "bbands"
 
 bbands_spec = {
     "id": bbands_id,  # 指标id，不能跟其他指标重复。
-    "name": "bbands",  # 指标名
-    "suffix": "",  # 后缀
+    "name": bbands_name,  # 指标名
+    "ori_name": bbands_name,
     "result_name": ["middle_result", "upper_result", "lower_result"],  # 结果数组列名
     "default_params": [14, 2.0],
     "param_count": 2,  # 需要多少参数。

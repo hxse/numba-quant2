@@ -21,8 +21,8 @@ end_time = time.time()
 print(f"numba模块导入冷启动时间: {end_time - start_time:.4f} 秒")
 
 from utils.config_utils import get_dtype_dict, perpare_data, get_params
-from src.indicators.sma import sma_id, sma2_id, sma_spec, sma2_spec
-from src.indicators.bbands import bbands_id, bbands_spec
+from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
+from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
 
 def run(pre_run=True,
@@ -65,9 +65,9 @@ def run(pre_run=True,
 
         params = get_params(num=1,
                             indicator_update={
-                                "sma": [[20]],
-                                "sma2": [[20]],
-                                "bbands": [[30, 3.0]]
+                                sma_name: [[20]],
+                                sma2_name: [[20]],
+                                bbands_name: [[30, 3.0]]
                             },
                             indicator_enabled={sma_id: True},
                             dtype_dict=dtype_dict)
