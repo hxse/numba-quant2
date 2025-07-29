@@ -5,16 +5,20 @@ import numpy as np
 def get_numba_data_types(enable64: bool = True):
     np_int_type = np.int64 if enable64 else np.int32
     np_float_type = np.float64 if enable64 else np.float32
+    np_bool_type = np.bool_
     nb_int_type = nb.int64 if enable64 else nb.int32
     nb_float_type = nb.float64 if enable64 else nb.float32
+    nb_bool_type = nb.boolean
     dtype_dict = {
         "np": {
             "int": np_int_type,
-            "float": np_float_type
+            "float": np_float_type,
+            "bool": np_bool_type
         },
         "nb": {
             "int": nb_int_type,
-            "float": nb_float_type
+            "float": nb_float_type,
+            "bool": nb_bool_type
         }
     }
     return dtype_dict
@@ -23,13 +27,14 @@ def get_numba_data_types(enable64: bool = True):
 default_types = get_numba_data_types(enable64=True)
 
 
-def get_params_signature(nb_int_type, nb_float_type):
+def get_params_signature(nb_int_type, nb_float_type, nb_bool_type):
     return nb.types.Tuple((  # params
         nb.types.Tuple((  # data_args
             nb_float_type[:, :],  # tohlcv
             nb_float_type[:, :],  # tohlcv2
             nb_float_type[:, :],  # tohlcv_smooth
             nb_float_type[:, :],  # tohlcv_smooth2
+            nb_float_type[:],  # mapping_data
         )),
         nb.types.Tuple((  # indicator_args
             # indicator_params
@@ -61,23 +66,28 @@ def get_params_signature(nb_int_type, nb_float_type):
         )),
         nb.types.Tuple((  # signal_args
             nb_int_type[:],  # signal_params
-            nb_float_type[:, :, :],  # signal_result
+            nb_bool_type[:, :, :],  # signal_result
         )),
         nb.types.Tuple((  # backtest_args
             nb_float_type[:, :],  # backtest_params
             nb_float_type[:, :, :],  # backtest_result
-            nb_float_type[:, :, :],  # temp_arrays
-        ))))
+        )),
+        nb.types.Tuple((  # temp_args
+            nb_int_type[:, :, :],  # int_temp_array
+            nb_float_type[:, :, :],  # float_temp_array
+            nb_bool_type[:, :, :],  # bool_temp_array
+        )),
+    ))
 
 
-def get_params_child_signature(nb_int_type, nb_float_type):
-
+def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
     return nb.types.Tuple((  # params
         nb.types.Tuple((  # data_args
             nb_float_type[:, :],  # tohlcv
             nb_float_type[:, :],  # tohlcv2
             nb_float_type[:, :],  # tohlcv_smooth
             nb_float_type[:, :],  # tohlcv_smooth2
+            nb_float_type[:],  # mapping_data
         )),
         nb.types.Tuple((  # indicator_args
             # indicator_params
@@ -109,10 +119,15 @@ def get_params_child_signature(nb_int_type, nb_float_type):
         )),
         nb.types.Tuple((  # signal_args
             nb_int_type[:],  # signal_params
-            nb_float_type[:, :],  # signal_result_child
+            nb_bool_type[:, :],  # signal_result_child
         )),
         nb.types.Tuple((  # backtest_args
             nb_float_type[:],  # backtest_params_child
             nb_float_type[:, :],  # backtest_result_child
-            nb_float_type[:, :],  # temp_arrays_child
-        ))))
+        )),
+        nb.types.Tuple((  # temp_args
+            nb_int_type[:, :],  # int_temp_array_child
+            nb_float_type[:, :],  # float_temp_array_child
+            nb_bool_type[:, :],  # bool_temp_array_child
+        )),
+    ))

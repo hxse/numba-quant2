@@ -17,8 +17,10 @@ def cpu_parallel_calc_jit(
     mode = "jit"
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
 
-    params_signature = get_params_signature(nb_int_type, nb_float_type)
+    params_signature = get_params_signature(nb_int_type, nb_float_type,
+                                            nb_bool_type)
     signature = nb.void(params_signature)
 
     _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
@@ -30,7 +32,8 @@ def cpu_parallel_calc_jit(
 
     def _cpu_parallel_calc_jit(params):
 
-        (data_args, indicator_args, signal_args, backtest_args) = params
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params
 
         (indicator_params, indicator_params2, indicator_enabled,
          indicator_enabled2, indicator_result,
@@ -43,7 +46,8 @@ def cpu_parallel_calc_jit(
             _indicator_args = (indicator_params, indicator_params2,
                                indicator_enabled, indicator_enabled2,
                                indicator_result, indicator_result2)
-            _params = (data_args, _indicator_args, signal_args, backtest_args)
+            _params = (data_args, _indicator_args, signal_args, backtest_args,
+                       temp_args)
             _params_child = _unpack_params_child(_params, idx)
 
             _parallel_calc(_params_child)
@@ -63,8 +67,10 @@ def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
     mode = "njit"
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
 
-    params_signature = get_params_signature(nb_int_type, nb_float_type)
+    params_signature = get_params_signature(nb_int_type, nb_float_type,
+                                            nb_bool_type)
     signature = nb.void(params_signature)
 
     _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
@@ -76,7 +82,8 @@ def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
 
     def _cpu_parallel_calc_njit(params):
 
-        (data_args, indicator_args, signal_args, backtest_args) = params
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params
 
         (indicator_params, indicator_params2, indicator_enabled,
          indicator_enabled2, indicator_result,
@@ -89,7 +96,8 @@ def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
             _indicator_args = (indicator_params, indicator_params2,
                                indicator_enabled, indicator_enabled2,
                                indicator_result, indicator_result2)
-            _params = (data_args, _indicator_args, signal_args, backtest_args)
+            _params = (data_args, _indicator_args, signal_args, backtest_args,
+                       temp_args)
             _params_child = _unpack_params_child(_params, idx)
 
             _parallel_calc(_params_child)
@@ -111,8 +119,10 @@ def gpu_kernel_device(cache=True,
     mode = "cuda"
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
 
-    params_signature = get_params_signature(nb_int_type, nb_float_type)
+    params_signature = get_params_signature(nb_int_type, nb_float_type,
+                                            nb_bool_type)
     signature = nb.void(params_signature)
 
     _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
@@ -124,7 +134,8 @@ def gpu_kernel_device(cache=True,
 
     def _gpu_kernel_device(params):
 
-        (data_args, indicator_args, signal_args, backtest_args) = params
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params
 
         (indicator_params, indicator_params2, indicator_enabled,
          indicator_enabled2, indicator_result,
@@ -145,7 +156,8 @@ def gpu_kernel_device(cache=True,
             _indicator_args = (indicator_params, indicator_params2,
                                indicator_enabled, indicator_enabled2,
                                indicator_result, indicator_result2)
-            _params = (data_args, _indicator_args, signal_args, backtest_args)
+            _params = (data_args, _indicator_args, signal_args, backtest_args,
+                       temp_args)
             _params_child = _unpack_params_child(_params, idx)
 
             _parallel_calc(_params_child)

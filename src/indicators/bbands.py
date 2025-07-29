@@ -4,6 +4,7 @@ from utils.numba_utils import numba_wrapper
 from utils.data_types import default_types
 import math
 from .sma import calculate_sma
+from enum import Enum
 
 bbands_id = 2
 bbands_name = "bbands"

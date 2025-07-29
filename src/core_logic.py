@@ -8,8 +8,10 @@ from .calculate_signals import calc_signal
 def parallel_calc(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
+
     params_child_signature = get_params_child_signature(
-        nb_int_type, nb_float_type)
+        nb_int_type, nb_float_type, nb_bool_type)
     signature = nb.void(params_child_signature)
 
     _calc_indicators = calc_indicators(mode,

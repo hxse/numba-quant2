@@ -14,7 +14,9 @@ def initialize_outputs(tohlcv,
                        indicator_enabled2,
                        conf_count,
                        dtype_dict,
-                       temp_num,
+                       temp_int_num,
+                       temp_float_num,
+                       temp_bool_num,
                        min_rows=0):
     """
     初始化并返回所有计算所需的输出数组和临时数组。
@@ -37,6 +39,7 @@ def initialize_outputs(tohlcv,
     #todo 等稳定了, 再让AI简化一下这个函数,现在先不弄
 
     np_float_type = dtype_dict["np"]["float"]
+    np_bool_type = dtype_dict["np"]["bool"]
 
     tohlcv_shape = tohlcv.shape
     tohlcv2_shape = tohlcv2.shape
@@ -54,8 +57,8 @@ def initialize_outputs(tohlcv,
 
     signal_output_dim = 4
     backtest_output_dim = 10
-    temp_output_dim = max(
-        temp_num, sma_spec["temp_count"] + sma2_spec["temp_count"] +
+    temp_float_num = max(
+        temp_float_num, sma_spec["temp_count"] + sma2_spec["temp_count"] +
         bbands_spec["temp_count"])
 
     sma_rows = tohlcv_rows if indicator_enabled[sma_spec["id"]] else min_rows
@@ -97,8 +100,8 @@ def initialize_outputs(tohlcv,
 
     # --- Signal Result Arrays ---
     signal_result = np.full((conf_count, tohlcv_rows, signal_output_dim),
-                            np.nan,
-                            dtype=np_float_type)
+                            False,
+                            dtype=np_bool_type)
 
     # --- Backtest Result Array ---
     backtest_result = np.full((conf_count, tohlcv_rows, backtest_output_dim),
@@ -106,22 +109,51 @@ def initialize_outputs(tohlcv,
                               dtype=np_float_type)
 
     # --- Temporary Arrays ---
-    temp_arrays = np.full((conf_count, tohlcv_rows, temp_output_dim),
-                          np.nan,
-                          dtype=np_float_type)
+    int_temp_array = np.full((conf_count, tohlcv_rows, temp_int_num),
+                             np.nan,
+                             dtype=np_float_type)
+    float_temp_array = np.full((conf_count, tohlcv_rows, temp_float_num),
+                               np.nan,
+                               dtype=np_float_type)
+    bool_temp_array = np.full((conf_count, tohlcv_rows, temp_bool_num),
+                              np.nan,
+                              dtype=np_float_type)
 
     return (tohlcv_smooth, tohlcv_smooth2, indicator_result, indicator_result2,
-            signal_result, backtest_result, temp_arrays)
+            signal_result, backtest_result, int_temp_array, float_temp_array,
+            bool_temp_array)
+
+
+def unpack_params(outputs, tohlcv, tohlcv2, mapping_data, indicator_params,
+                  indicator_params2, indicator_enabled, indicator_enabled2,
+                  signal_params, backtest_params):
+    (tohlcv_smooth, tohlcv_smooth2, indicator_result, indicator_result2,
+     signal_result, backtest_result, int_temp_array, float_temp_array,
+     bool_temp_array) = outputs
+
+    data_args = (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data)
+    indicator_args = (indicator_params, indicator_params2, indicator_enabled,
+                      indicator_enabled2, indicator_result, indicator_result2)
+    signal_args = (signal_params, signal_result)
+    backtest_args = (backtest_params, backtest_result)
+    temp_args = (int_temp_array, float_temp_array, bool_temp_array)
+
+    cpu_params = (data_args, indicator_args, signal_args, backtest_args,
+                  temp_args)
+    return cpu_params
 
 
 def unpack_params_child(mode, cache=True, dtype_dict=default_types):
 
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
 
-    params_type = get_params_signature(nb_int_type, nb_float_type)
+    params_type = get_params_signature(nb_int_type, nb_float_type,
+                                       nb_bool_type)
 
-    return_type = get_params_child_signature(nb_int_type, nb_float_type)
+    return_type = get_params_child_signature(nb_int_type, nb_float_type,
+                                             nb_bool_type)
 
     signature = return_type(params_type, nb_int_type)
 
@@ -131,13 +163,16 @@ def unpack_params_child(mode, cache=True, dtype_dict=default_types):
         data_args, 不需要用idx传递
         其他都需要用idx传递
         '''
-        (data_args, indicator_args, signal_args, backtest_args) = params
-        (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2) = data_args
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params
+        (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2,
+         mapping_data) = data_args
         (indicator_params, indicator_params2, indicator_enabled,
          indicator_enabled2, indicator_result,
          indicator_result2) = indicator_args
         (signal_params, signal_result) = signal_args
-        (backtest_params, backtest_result, temp_arrays) = backtest_args
+        (backtest_params, backtest_result) = backtest_args
+        (int_temp_array, float_temp_array, bool_temp_array) = temp_args
 
         (sma_params, sma2_params, bbands_params) = indicator_params
         (sma_params2, sma2_params2, bbands_params2) = indicator_params2
@@ -160,11 +195,13 @@ def unpack_params_child(mode, cache=True, dtype_dict=default_types):
 
         signal_args_child = (signal_params, signal_result[idx])
 
-        backtest_args_child = (backtest_params[idx], backtest_result[idx],
-                               temp_arrays[idx])
+        backtest_args_child = (backtest_params[idx], backtest_result[idx])
+
+        temp_args_child = (int_temp_array[idx], float_temp_array[idx],
+                           bool_temp_array[idx])
 
         params_child = (data_args, indicator_args_child, signal_args_child,
-                        backtest_args_child)
+                        backtest_args_child, temp_args_child)
 
         return params_child
 
@@ -172,42 +209,31 @@ def unpack_params_child(mode, cache=True, dtype_dict=default_types):
                          cache_enabled=cache)(_unpack_params_child)
 
 
-def unpack_params(outputs, tohlcv, tohlcv2, indicator_params,
-                  indicator_params2, indicator_enabled, indicator_enabled2,
-                  signal_params, backtest_params):
-    (tohlcv_smooth, tohlcv_smooth2, indicator_result, indicator_result2,
-     signal_result, backtest_result, temp_arrays) = outputs
-
-    data_args = (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2)
-    indicator_args = (indicator_params, indicator_params2, indicator_enabled,
-                      indicator_enabled2, indicator_result, indicator_result2)
-    signal_args = (signal_params, signal_result)
-    backtest_args = (backtest_params, backtest_result, temp_arrays)
-
-    cpu_params = (data_args, indicator_args, signal_args, backtest_args)
-    return cpu_params
-
-
 def get_output(params):
-    (data_args, indicator_args, signal_args, backtest_args) = params
+    (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
     (indicator_params, indicator_params2, indicator_enabled,
      indicator_enabled2, indicator_result, indicator_result2) = indicator_args
     (signal_params, signal_result) = signal_args
-    (backtest_params, backtest_result, temp_arrays) = backtest_args
+    (backtest_params, backtest_result) = backtest_args
+    (int_temp_array, float_temp_array, bool_temp_array) = temp_args
 
     return (indicator_result, indicator_result2, signal_result,
-            backtest_result, temp_arrays)
+            backtest_result, int_temp_array, float_temp_array, bool_temp_array)
 
 
 def get_conf_count(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
-    params_signature = get_params_signature(nb_int_type, nb_float_type)
+    nb_bool_type = dtype_dict["nb"]["bool"]
+
+    params_signature = get_params_signature(nb_int_type, nb_float_type,
+                                            nb_bool_type)
     signature = nb_int_type(params_signature)
 
     def _get_conf_count(params):
-        (data_args, indicator_args, signal_args, backtest_args) = params
-        (backtest_params, backtest_result, temp_arrays) = backtest_args
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params
+        (backtest_params, backtest_result) = backtest_args
         return backtest_params.shape[0]
 
     return numba_wrapper(mode, signature=signature,

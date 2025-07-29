@@ -82,13 +82,14 @@ def run(pre_run=True,
 
         mode_array = ["jit", "njit", "cuda"]
         # mode_array = ["njit"]
-        # mode_array = ["cuda"]
+        mode_array = ["cuda"]
 
         for mode in mode_array:
             _func = calculate_time_wrapper if task_time else calculate
             (
                 indicator_result, indicator_result2, signal_result,
-                backtest_result, temp_arrays
+                backtest_result, int_temp_array, float_temp_array,
+                bool_temp_array
             ) = _func(
                 mode,
                 np_data,
@@ -97,8 +98,9 @@ def run(pre_run=True,
                 params["signal_params"],
                 params["backtest_params"],
                 #   tohlcv2=np_data2,
-                #   indicator_params2=indicator_params2,
-                #   indicator_enabled2=indicator_enabled2,
+                #   indicator_params2=params["indicator_params2"],
+                #   indicator_enabled2=params["indicator_enabled2"],
+                # mapping_data=params["mapping_data"],
                 cache=cache,
                 dtype_dict=dtype_dict,
                 core_time=core_time)

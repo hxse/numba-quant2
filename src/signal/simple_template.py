@@ -6,22 +6,34 @@ from utils.data_types import default_types
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
+from .calculation_tool import bool_compare, assign_elementwise, ComparisonOperator as co, AssignOperator as ao
+
 
 def simple_signal(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
+
     signature = nb.void(
         nb_float_type[:, :],  # tohlcv
+        nb_float_type[:, :],  # tohlcv2
         nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
                         nb_float_type[:, :])),  # indicator_result_child
         nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
                         nb_float_type[:, :])),  # indicator_result2_child
         nb_int_type[:],  # signal_params
-        nb_float_type[:, :]  # signal_result_child
+        nb_bool_type[:, :],  # signal_result_child
+        nb.types.Tuple((
+            nb_int_type[:, :],  # int_temp_array_child
+            nb_float_type[:, :],  # float_temp_array_child
+            nb_bool_type[:, :],  # bool_temp_array_child
+        )),
     )
+    _bool_compare = bool_compare(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _simple_signal(tohlcv, indicator_result_child, indicator_result2_child,
-                       signal_params, signal_result_child):
+    def _simple_signal(tohlcv, tohlcv2, indicator_result_child,
+                       indicator_result2_child, signal_params,
+                       signal_result_child, temp_args):
 
         close = tohlcv[:, 4]
 
@@ -38,20 +50,24 @@ def simple_signal(mode, cache=True, dtype_dict=default_types):
         sma2_result2 = sma2_indicator_result2_child[:, 0]
 
         enter_long_signal = signal_result_child[:, 0]
-        for i in range(len(enter_long_signal)):
-            enter_long_signal[i] = int(sma_result[i] > sma2_result[i])
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
+                      ao.ASSIGN)
 
         exit_long_signal = signal_result_child[:, 1]
-        for i in range(len(exit_long_signal)):
-            exit_long_signal[i] = int(sma_result[i] < sma2_result[i])
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
+                      ao.ASSIGN)
 
         enter_short_signal = signal_result_child[:, 2]
-        for i in range(len(enter_short_signal)):
-            enter_short_signal[i] = int(sma_result[i] < sma2_result[i])
+        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
+                      ao.ASSIGN)
 
         exit_short_signal = signal_result_child[:, 3]
-        for i in range(len(exit_short_signal)):
-            exit_short_signal[i] = int(sma_result[i] > sma2_result[i])
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
+                      ao.ASSIGN)
+
+        exit_short_signal = signal_result_child[:, 3]
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
+                      ao.BITWISE_AND)
 
     return numba_wrapper(mode, signature=signature,
                          cache_enabled=cache)(_simple_signal)

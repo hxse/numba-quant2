@@ -47,10 +47,13 @@ def calculate(
         tohlcv2=None,
         indicator_params2=None,
         indicator_enabled2=None,
+        mapping_data=None,
         cache=False,
         dtype_dict=default_types,
         min_rows=0,  #最小填充数组行数
-        temp_num=6,
+        temp_int_num=1,
+        temp_float_num=1,
+        temp_bool_num=4,
         core_time=False,
         auto_tune_cuda_config=True,
         cuda_tuning_params={},  # 收集所有传递给 auto_tune_cuda_parameters 的参数
@@ -79,6 +82,10 @@ def calculate(
     if indicator_enabled2 is None:
         indicator_enabled2 = np.zeros_like(indicator_enabled)
 
+    if mapping_data is None:
+        # todo 待完善
+        mapping_data = np.zeros_like(indicator_enabled)
+
     outputs = initialize_outputs(tohlcv,
                                  tohlcv2,
                                  indicator_params,
@@ -87,13 +94,15 @@ def calculate(
                                  indicator_enabled2,
                                  _conf_count,
                                  dtype_dict,
-                                 temp_num,
+                                 temp_int_num=temp_int_num,
+                                 temp_float_num=temp_float_num,
+                                 temp_bool_num=temp_bool_num,
                                  min_rows=min_rows)
 
-    cpu_params = unpack_params(outputs, tohlcv, tohlcv2, indicator_params,
-                               indicator_params2, indicator_enabled,
-                               indicator_enabled2, signal_params,
-                               backtest_params)
+    cpu_params = unpack_params(outputs, tohlcv, tohlcv2, mapping_data,
+                               indicator_params, indicator_params2,
+                               indicator_enabled, indicator_enabled2,
+                               signal_params, backtest_params)
 
     if mode == "jit" or mode == "normal":
         _func = cpu_parallel_calc_jit_wrapper if core_time else cpu_parallel_calc_jit

@@ -9,8 +9,10 @@ from src.indicators.bbands import calculate_bbands_wrapper, bbands_id
 def calc_indicators(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
+    nb_bool_type = dtype_dict["nb"]["bool"]
+
     params_child_signature = get_params_child_signature(
-        nb_int_type, nb_float_type)
+        nb_int_type, nb_float_type, nb_bool_type)
     signature = nb.void(params_child_signature)
 
     _calculate_sma_wrapper = calculate_sma_wrapper(mode,
@@ -22,14 +24,17 @@ def calc_indicators(mode, cache=True, dtype_dict=default_types):
                                                          dtype_dict=dtype_dict)
 
     def _calc_indicators(params_child):
-        (data_args, indicator_args, signal_args, backtest_args) = params_child
-        (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2) = data_args
+        (data_args, indicator_args, signal_args, backtest_args,
+         temp_args) = params_child
+        (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2,
+         mapping_data) = data_args
         (indicator_params_child, indicator_params2_child, indicator_enabled,
          indicator_enabled2, indicator_result_child,
          indicator_result2_child) = indicator_args
         (signal_params, signal_result_child) = signal_args
-        (backtest_params_child, backtest_result_child,
-         temp_arrays_child) = backtest_args
+        (backtest_params_child, backtest_result_child) = backtest_args
+        (int_temp_array_child, float_temp_array_child,
+         bool_temp_array_child) = temp_args
 
         if indicator_enabled[sma_id] == 1:
             _calculate_sma_wrapper(tohlcv, indicator_params_child,

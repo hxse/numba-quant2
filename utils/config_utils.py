@@ -45,13 +45,17 @@ def get_params(num,
     indicator_enabled2 = get_indicator_enabled(update_params=indicator_enabled2,
                                                dtype_dict=dtype_dict)
 
+    # todo 待完善
+    mapping_data= get_mapping_data([],[],dtype_dict=dtype_dict)
+
     return {
         "indicator_params": indicator_params,
         "indicator_enabled": indicator_enabled,
         "signal_params": signal_params,
         "backtest_params": backtest_params,
         "indicator_params2": indicator_params2,
-        "indicator_enabled2": indicator_enabled2
+        "indicator_enabled2": indicator_enabled2,
+        "mapping_data":mapping_data
     }
 
 
@@ -129,6 +133,10 @@ def get_backtest_params(num=1, params=[], dtype_dict=default_dtype_dict):
     params = np.array(default_params, dtype=dtype_dict["np"]["float"])
     return ensure_c_contiguous(params)
 
+def get_mapping_data(data1,data2, dtype_dict=default_dtype_dict):
+    # todo 具体逻辑待完善
+    params = np.array([1,2,3], dtype=dtype_dict["np"]["int"])
+    return ensure_c_contiguous(params)
 
 def perpare_data(path, data_size=None, dtype_dict=default_dtype_dict):
     df_data = load_tohlcv_from_csv(path, data_size, dtype_dict)
