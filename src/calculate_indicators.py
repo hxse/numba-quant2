@@ -36,15 +36,15 @@ def calc_indicators(mode, cache=True, dtype_dict=default_types):
         (int_temp_array_child, float_temp_array_child,
          bool_temp_array_child) = temp_args
 
-        if indicator_enabled[sma_id] == 1:
+        if indicator_enabled[sma_id]:
             _calculate_sma_wrapper(tohlcv, indicator_params_child,
                                    indicator_result_child, sma_id)
 
-        if indicator_enabled[sma2_id] == 1:
+        if indicator_enabled[sma2_id]:
             _calculate_sma_wrapper(tohlcv, indicator_params_child,
                                    indicator_result_child, sma2_id)
 
-        if indicator_enabled[bbands_id] == 1:
+        if indicator_enabled[bbands_id]:
             _calculate_bbands_wrapper(tohlcv, indicator_params_child,
                                       indicator_result_child, bbands_id)
 

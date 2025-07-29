@@ -38,6 +38,7 @@ def initialize_outputs(tohlcv,
 
     #todo 等稳定了, 再让AI简化一下这个函数,现在先不弄
 
+    np_int_type = dtype_dict["np"]["int"]
     np_float_type = dtype_dict["np"]["float"]
     np_bool_type = dtype_dict["np"]["bool"]
 
@@ -110,14 +111,14 @@ def initialize_outputs(tohlcv,
 
     # --- Temporary Arrays ---
     int_temp_array = np.full((conf_count, tohlcv_rows, temp_int_num),
-                             np.nan,
-                             dtype=np_float_type)
+                             0,
+                             dtype=np_int_type)
     float_temp_array = np.full((conf_count, tohlcv_rows, temp_float_num),
-                               np.nan,
+                               0,
                                dtype=np_float_type)
     bool_temp_array = np.full((conf_count, tohlcv_rows, temp_bool_num),
-                              np.nan,
-                              dtype=np_float_type)
+                              0,
+                              dtype=np_bool_type)
 
     return (tohlcv_smooth, tohlcv_smooth2, indicator_result, indicator_result2,
             signal_result, backtest_result, int_temp_array, float_temp_array,

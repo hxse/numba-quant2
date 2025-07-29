@@ -84,7 +84,7 @@ def calculate(
 
     if mapping_data is None:
         # todo 待完善
-        mapping_data = np.zeros_like(indicator_enabled)
+        mapping_data = np.zeros_like(signal_params)
 
     outputs = initialize_outputs(tohlcv,
                                  tohlcv2,

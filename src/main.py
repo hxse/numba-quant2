@@ -50,7 +50,7 @@ def run(pre_run=True,
         path2 = "database/live/BTC_USDT/4h/BTC_USDT_4h_20230228 160000.csv"
 
         data_size = 40 * 1000
-        data_size = data_size if i == 0 else data_size + i
+        data_size = 10 if i == 0 else data_size
 
         dtype_dict = get_dtype_dict(enable64=True)
 
@@ -82,7 +82,7 @@ def run(pre_run=True,
 
         mode_array = ["jit", "njit", "cuda"]
         # mode_array = ["njit"]
-        mode_array = ["cuda"]
+        # mode_array = ["cuda"]
 
         for mode in mode_array:
             _func = calculate_time_wrapper if task_time else calculate

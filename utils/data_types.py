@@ -34,7 +34,7 @@ def get_params_signature(nb_int_type, nb_float_type, nb_bool_type):
             nb_float_type[:, :],  # tohlcv2
             nb_float_type[:, :],  # tohlcv_smooth
             nb_float_type[:, :],  # tohlcv_smooth2
-            nb_float_type[:],  # mapping_data
+            nb_int_type[:],  # mapping_data
         )),
         nb.types.Tuple((  # indicator_args
             # indicator_params
@@ -49,8 +49,8 @@ def get_params_signature(nb_int_type, nb_float_type, nb_bool_type):
                 nb_float_type[:, :],  # sma2_params2
                 nb_float_type[:, :],  # bbands_params2
             )),
-            nb_float_type[:],  # indicator_enabled
-            nb_float_type[:],  # indicator_enabled2
+            nb_bool_type[:],  # indicator_enabled
+            nb_bool_type[:],  # indicator_enabled2
             # indicator_result
             nb.types.Tuple((
                 nb_float_type[:, :, :],  # sma_result
@@ -87,7 +87,7 @@ def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
             nb_float_type[:, :],  # tohlcv2
             nb_float_type[:, :],  # tohlcv_smooth
             nb_float_type[:, :],  # tohlcv_smooth2
-            nb_float_type[:],  # mapping_data
+            nb_int_type[:],  # mapping_data
         )),
         nb.types.Tuple((  # indicator_args
             # indicator_params
@@ -102,8 +102,8 @@ def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
                 nb_float_type[:],  # sma2_params2_child
                 nb_float_type[:],  # bbands_params2_child
             )),
-            nb_float_type[:],  # indicator_enabled
-            nb_float_type[:],  # indicator_enabled2
+            nb_bool_type[:],  # indicator_enabled
+            nb_bool_type[:],  # indicator_enabled2
             # indicator_result
             nb.types.Tuple((
                 nb_float_type[:, :],  # sma_result_child

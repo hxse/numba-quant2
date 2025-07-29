@@ -51,64 +51,50 @@ def bool_compare(mode, cache=True, dtype_dict=default_types):
     )
 
     def _bool_compare(array1, array2, output, comparison_mode, assign_mode):
-        if len(array1) < len(output) or len(array2) < len(output):
+        if len(array1) != len(array2) or len(output) < len(array1) or len(
+                output) < len(array2):
             return
         if assign_mode == AssignOperator.ASSIGN:
-            if comparison_mode == ComparisonOperator.eq:
-                for i in range(len(output)):
+            for i in range(len(array1)):
+                if comparison_mode == ComparisonOperator.eq:
                     output[i] = array1[i] == array2[i]
-            elif comparison_mode == ComparisonOperator.ne:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ne:
                     output[i] = array1[i] != array2[i]
-            elif comparison_mode == ComparisonOperator.gt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.gt:
                     output[i] = array1[i] > array2[i]
-            elif comparison_mode == ComparisonOperator.ge:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ge:
                     output[i] = array1[i] >= array2[i]
-            elif comparison_mode == ComparisonOperator.lt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.lt:
                     output[i] = array1[i] < array2[i]
-            elif comparison_mode == ComparisonOperator.le:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.le:
                     output[i] = array1[i] <= array2[i]
         elif assign_mode == AssignOperator.BITWISE_AND:
-            if comparison_mode == ComparisonOperator.eq:
-                for i in range(len(output)):
+            for i in range(len(array1)):
+                if comparison_mode == ComparisonOperator.eq:
                     output[i] = output[i] & (array1[i] == array2[i])
-            elif comparison_mode == ComparisonOperator.ne:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ne:
                     output[i] = output[i] & (array1[i] != array2[i])
-            elif comparison_mode == ComparisonOperator.gt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.gt:
                     output[i] = output[i] & (array1[i] > array2[i])
-            elif comparison_mode == ComparisonOperator.ge:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ge:
                     output[i] = output[i] & (array1[i] >= array2[i])
-            elif comparison_mode == ComparisonOperator.lt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.lt:
                     output[i] = output[i] & (array1[i] < array2[i])
-            elif comparison_mode == ComparisonOperator.le:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.le:
                     output[i] = output[i] & (array1[i] <= array2[i])
         elif assign_mode == AssignOperator.BITWISE_OR:
-            if comparison_mode == ComparisonOperator.eq:
-                for i in range(len(output)):
+            for i in range(len(array1)):
+                if comparison_mode == ComparisonOperator.eq:
                     output[i] = output[i] | (array1[i] == array2[i])
-            elif comparison_mode == ComparisonOperator.ne:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ne:
                     output[i] = output[i] | (array1[i] != array2[i])
-            elif comparison_mode == ComparisonOperator.gt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.gt:
                     output[i] = output[i] | (array1[i] > array2[i])
-            elif comparison_mode == ComparisonOperator.ge:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.ge:
                     output[i] = output[i] | (array1[i] >= array2[i])
-            elif comparison_mode == ComparisonOperator.lt:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.lt:
                     output[i] = output[i] | (array1[i] < array2[i])
-            elif comparison_mode == ComparisonOperator.le:
-                for i in range(len(output)):
+                elif comparison_mode == ComparisonOperator.le:
                     output[i] = output[i] | (array1[i] <= array2[i])
 
     return numba_wrapper(mode, signature=signature,
@@ -127,16 +113,14 @@ def assign_elementwise(mode, cache=True, dtype_dict=default_types):
     )
 
     def _assign_elementwise(array, output, opt_mode):
-        if len(array) < len(output):
+        if len(output) < len(array):
             return
-        if opt_mode == AssignOperator.ASSIGN:
-            for i in range(len(output)):
+        for i in range(len(array)):
+            if opt_mode == AssignOperator.ASSIGN:
                 output[i] = array[i]
-        elif opt_mode == AssignOperator.BITWISE_AND:
-            for i in range(len(output)):
+            elif opt_mode == AssignOperator.BITWISE_AND:
                 output[i] = output[i] & array[i]
-        elif opt_mode == AssignOperator.BITWISE_OR:
-            for i in range(len(output)):
+            elif opt_mode == AssignOperator.BITWISE_OR:
                 output[i] = output[i] | array[i]
 
     return numba_wrapper(mode, signature=signature,

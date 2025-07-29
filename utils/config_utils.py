@@ -117,10 +117,9 @@ def get_indicator_params(num: int = 1,
 
 
 def get_indicator_enabled(update_params={}, dtype_dict=default_dtype_dict):
-    params = np.zeros(indicator_count, dtype=dtype_dict["np"]["float"])
+    params = np.zeros(indicator_count, dtype=dtype_dict["np"]["bool"])
     for k, v in update_params.items():
-        # params[k] = 1 if v else 0
-        params[k] = int(bool(v))
+        params[k] = bool(v)
     return ensure_c_contiguous(params)
 
 def get_signal_params(params=[], dtype_dict=default_dtype_dict):
@@ -141,4 +140,5 @@ def get_mapping_data(data1,data2, dtype_dict=default_dtype_dict):
 def perpare_data(path, data_size=None, dtype_dict=default_dtype_dict):
     df_data = load_tohlcv_from_csv(path, data_size, dtype_dict)
     np_data = convert_tohlcv_numpy(df_data, dtype_dict)
-    return df_data, np_data
+
+    return df_data,  ensure_c_contiguous(np_data)

@@ -65,9 +65,37 @@ def simple_signal(mode, cache=True, dtype_dict=default_types):
         _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
                       ao.ASSIGN)
 
+        enter_long_signal = signal_result_child[:, 0]
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
+                      ao.BITWISE_AND)
+
+        exit_long_signal = signal_result_child[:, 1]
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
+                      ao.BITWISE_AND)
+
+        enter_short_signal = signal_result_child[:, 2]
+        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
+                      ao.BITWISE_AND)
+
         exit_short_signal = signal_result_child[:, 3]
         _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
                       ao.BITWISE_AND)
+
+        enter_long_signal = signal_result_child[:, 0]
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
+                      ao.BITWISE_OR)
+
+        exit_long_signal = signal_result_child[:, 1]
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
+                      ao.BITWISE_OR)
+
+        enter_short_signal = signal_result_child[:, 2]
+        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
+                      ao.BITWISE_OR)
+
+        exit_short_signal = signal_result_child[:, 3]
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
+                      ao.BITWISE_OR)
 
     return numba_wrapper(mode, signature=signature,
                          cache_enabled=cache)(_simple_signal)
