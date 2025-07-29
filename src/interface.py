@@ -6,6 +6,7 @@ from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工�
 from utils.time_utils import time_wrapper
 from utils.data_types import default_types
 from utils.numba_unpack import unpack_params, get_output, initialize_outputs
+import time
 
 
 def transform_data_recursive(data, mode='to_device'):
@@ -71,6 +72,8 @@ def calculate(
     4. 我更倾向于盘感驱动式量化交易(符合人的交易直觉),而不是像机械学习那样大规模探索指标和策略(看起来太黑箱了),所以indicator_enabled就没必要在并发中可变了,循环中可变已经够用了
     5. 为什么只有一个signal_params,如果用两个signal_params,是为了指标信号探索过程中的不同周期组合,这个就太复杂了(像机械学习),我只需要简单的信号模版选择功能就行了(盘感驱动的量化交易)
     '''
+    start_time = time.perf_counter()
+
     _conf_count = backtest_params.shape[0]
 
     if tohlcv2 is None:
@@ -103,6 +106,8 @@ def calculate(
                                indicator_params, indicator_params2,
                                indicator_enabled, indicator_enabled2,
                                signal_params, backtest_params)
+    end_time = time.perf_counter()
+    print("数据生成时间:", end_time - start_time)
 
     if mode == "normal":
         _func = cpu_parallel_calc_normal_wrapper if core_time else cpu_parallel_calc_normal

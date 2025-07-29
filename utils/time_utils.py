@@ -9,9 +9,9 @@ def time_wrapper(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        start_time = time.time()
+        start_time = time.perf_counter()
         result = func(*args, **kwargs)
-        end_time = time.time()
+        end_time = time.perf_counter()
         run_time = end_time - start_time
         prefix = kwargs["mode"] + " " if "mode" in kwargs else ""
         print(f"{prefix}{func.__name__} 运行时间: {run_time:.6f} 秒")

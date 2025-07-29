@@ -60,12 +60,12 @@ def run(pre_run=True,
         df_data2, np_data2 = perpare_data(path2,
                                           data_size=data_size,
                                           dtype_dict=dtype_dict)
-
-        params = get_params(num=1,
+        num = 1
+        params = get_params(num=num,
                             indicator_update={
-                                sma_name: [[14]],
-                                sma2_name: [[50]],
-                                bbands_name: [[20, 2.0]]
+                                sma_name: [[14] for i in range(num)],
+                                sma2_name: [[50] for i in range(num)],
+                                bbands_name: [[20, 2.0] for i in range(num)]
                             },
                             signal_params=[0, 0],
                             indicator_enabled={
@@ -107,9 +107,9 @@ def run(pre_run=True,
 
             if i != 0:
                 print(f"{mode} out_arrays length:", len(backtest_result))
-                print(f"{mode} indicator_result:", indicator_result)
+                # print(f"{mode} indicator_result:", indicator_result)
                 # print(f"{mode} indicator_result2:", indicator_result2)
-                print(f"{mode} signal_result:", signal_result)
+                # print(f"{mode} signal_result:", signal_result)
 
         if total_time:
             print(
