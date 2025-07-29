@@ -9,7 +9,7 @@ def numba_wrapper(
         signature: tuple | None = None,  # 签名现在可以为 None，因为 normal 模式不需要
         cache_enabled: bool = False,  # 默认改为 False，按需开启
         parallel: bool = False,
-        inline: str = "never",
+        set_inline_to_always: bool = False,
         max_registers: int | None = None,
         use_global_cache: bool = True):
     """
@@ -40,8 +40,9 @@ def numba_wrapper(
             func.__qualname__,
             mode,
             signature,
+            cache_enabled,
             parallel,
-            cache_enabled  # Numba自身的缓存设置也作为键的一部分
+            set_inline_to_always,
         ]
 
         # max_registers 只在 CUDA 模式下影响编译结果，所以只在这种情况下加入到键中
@@ -55,33 +56,24 @@ def numba_wrapper(
             # print(f"--- 从全局缓存获取函数: {func.__qualname__} ---") # 调试信息
             return _compiled_functions_cache[cache_key]
 
+        # 动态构建 Numba 装饰器的参数字典
+        decorator_kwargs = {"parallel": parallel, "cache": cache_enabled}
+
+        if set_inline_to_always:
+            decorator_kwargs["inline"] = "always"  # 'always' or 'never'
+
         # 如果不在全局缓存中，则执行 Numba 编译
         if mode == "normal":
-            compiled_func = jit(signature,
-                                nopython=False,
-                                parallel=parallel,
-                                inline=inline,
-                                cache=cache_enabled)(func)
-        elif mode == 'jit':
-            compiled_func = jit(signature,
-                                nopython=True,
-                                parallel=parallel,
-                                inline=inline,
-                                cache=cache_enabled)(func)
+            decorator_kwargs["nopython"] = False
+            compiled_func = jit(signature, **decorator_kwargs)(func)
         elif mode == 'njit':
-            compiled_func = njit(signature,
-                                 parallel=parallel,
-                                 inline=inline,
-                                 cache=cache_enabled)(func)
+            compiled_func = njit(signature, **decorator_kwargs)(func)
         elif mode == 'cuda':
-            compiled_func = cuda.jit(
-                signature,
-                device=
-                not parallel,  # CUDA 的 parallel 参数通常是针对 CPU 后端，device=True 表示在 GPU 上运行
-                inline=inline,
-                cache=cache_enabled,
-                max_registers=max_registers)(func)
-
+            decorator_kwargs["device"] = not parallel
+            if max_registers is not None:
+                decorator_kwargs["max_registers"] = max_registers
+            decorator_kwargs.pop("parallel", None)  # 移除不适用的参数
+            compiled_func = cuda.jit(signature, **decorator_kwargs)(func)
         else:
             raise ValueError(f"Invalid mode: {mode}")
 

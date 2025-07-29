@@ -1,7 +1,7 @@
 import numpy as np
 import numba as nb
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
-from src.parallel_executors import cpu_parallel_calc_jit, cpu_parallel_calc_njit, gpu_kernel_device, cpu_parallel_calc_jit_wrapper, cpu_parallel_calc_njit_wrapper, gpu_kernel_device_wrapper
+from src.parallel_executors import cpu_parallel_calc_normal, cpu_parallel_calc_njit, gpu_kernel_device, cpu_parallel_calc_normal_wrapper, cpu_parallel_calc_njit_wrapper, gpu_kernel_device_wrapper
 from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工具函数
 from utils.time_utils import time_wrapper
 from utils.data_types import default_types
@@ -104,8 +104,8 @@ def calculate(
                                indicator_enabled, indicator_enabled2,
                                signal_params, backtest_params)
 
-    if mode == "jit" or mode == "normal":
-        _func = cpu_parallel_calc_jit_wrapper if core_time else cpu_parallel_calc_jit
+    if mode == "normal":
+        _func = cpu_parallel_calc_normal_wrapper if core_time else cpu_parallel_calc_normal
         _cpu_parallel_calc = _func(cache=cache, dtype_dict=dtype_dict)
         _cpu_parallel_calc(cpu_params)
         return get_output(cpu_params)

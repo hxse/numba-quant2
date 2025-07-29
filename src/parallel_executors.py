@@ -7,14 +7,14 @@ from utils.time_utils import time_wrapper
 from utils.numba_unpack import unpack_params_child, get_conf_count
 
 
-def cpu_parallel_calc_jit(
+def cpu_parallel_calc_normal(
     cache=True,
     dtype_dict=default_types,
 ):
     '''
     工具函数版本运行失败
     '''
-    mode = "jit"
+    mode = "normal"
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
     nb_bool_type = dtype_dict["nb"]["bool"]
@@ -30,7 +30,7 @@ def cpu_parallel_calc_jit(
 
     _parallel_calc = parallel_calc(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _cpu_parallel_calc_jit(params):
+    def _cpu_parallel_calc_normal(params):
 
         (data_args, indicator_args, signal_args, backtest_args,
          temp_args) = params
@@ -55,12 +55,12 @@ def cpu_parallel_calc_jit(
     return numba_wrapper(mode,
                          signature=signature,
                          cache_enabled=cache,
-                         parallel=True)(_cpu_parallel_calc_jit)
+                         parallel=True)(_cpu_parallel_calc_normal)
 
 
 @time_wrapper
-def cpu_parallel_calc_jit_wrapper(*args, **kargs):
-    return cpu_parallel_calc_jit(*args, **kargs)
+def cpu_parallel_calc_normal_wrapper(*args, **kargs):
+    return cpu_parallel_calc_normal(*args, **kargs)
 
 
 def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):

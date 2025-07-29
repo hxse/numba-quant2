@@ -80,7 +80,7 @@ def run(pre_run=True,
 
         start_time = time.time()
 
-        mode_array = ["jit", "njit", "cuda"]
+        mode_array = ["normal", "njit", "cuda"]
         # mode_array = ["njit"]
         # mode_array = ["cuda"]
 

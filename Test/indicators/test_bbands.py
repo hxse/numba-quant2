@@ -41,13 +41,14 @@ def test_accuracy(df_data,
                             dtype_dict=dtype_dict)
 
         (indicator_result, indicator_result2, signal_result, backtest_result,
-         temp_arrays) = calculate(
+         int_temp_array, float_temp_array, bool_temp_array) = calculate(
              "njit",
              np_data,
              params["indicator_params"],
              params["indicator_enabled"],
              params["signal_params"],
              params["backtest_params"],
+             cache=False,
              dtype_dict=dtype_dict,
          )
 
