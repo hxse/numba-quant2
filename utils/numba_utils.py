@@ -5,13 +5,14 @@ _compiled_functions_cache = {}
 
 
 def numba_wrapper(
-        mode: str,
-        signature: tuple | None = None,  # 签名现在可以为 None，因为 normal 模式不需要
-        cache_enabled: bool = False,  # 默认改为 False，按需开启
-        parallel: bool = False,
-        set_inline_to_always: bool = False,
-        max_registers: int | None = None,
-        use_global_cache: bool = True):
+    mode: str,
+    signature: tuple | None = None,  # 签名现在可以为 None，因为 normal 模式不需要
+    cache_enabled: bool = False,  # 默认改为 False，按需开启
+    parallel: bool = False,
+    set_inline_to_always: bool = False,
+    max_registers: int | None = None,
+    use_global_cache: bool = True,
+):
     """
     根据指定的模式返回一个 Numba 装饰器工厂。
     增加了全局缓存机制，避免重复编译/获取已缓存函数时的开销。
@@ -34,7 +35,6 @@ def numba_wrapper(
     """
 
     def decorator(func):
-
         # 构建缓存键的基础元素
         key_elements = [
             func.__qualname__,
@@ -46,7 +46,7 @@ def numba_wrapper(
         ]
 
         # max_registers 只在 CUDA 模式下影响编译结果，所以只在这种情况下加入到键中
-        if mode == 'cuda':
+        if mode == "cuda":
             key_elements.append(max_registers)
 
         cache_key = tuple(key_elements)
@@ -66,9 +66,9 @@ def numba_wrapper(
         if mode == "normal":
             decorator_kwargs["nopython"] = False
             compiled_func = jit(signature, **decorator_kwargs)(func)
-        elif mode == 'njit':
+        elif mode == "njit":
             compiled_func = njit(signature, **decorator_kwargs)(func)
-        elif mode == 'cuda':
+        elif mode == "cuda":
             decorator_kwargs["device"] = not parallel
             if max_registers is not None:
                 decorator_kwargs["max_registers"] = max_registers

@@ -9,6 +9,7 @@ class ComparisonOperator(IntEnum):
     """
     定义各种比较运算符，包括区分大小写和不区分大小写（如果适用）。
     """
+
     # 等于 (Equals)
     eq = auto()  # 默认或常规等于
 
@@ -32,6 +33,7 @@ class AssignOperator(IntEnum):
     """
     定义逐元素赋值操作的类型。
     """
+
     ASSIGN = auto()  # 直接赋值 (例如 1)
     BITWISE_AND = auto()  # 位与赋值 (例如 2)
     BITWISE_OR = auto()  # 位或赋值 (例如 3)
@@ -51,8 +53,11 @@ def bool_compare(mode, cache=True, dtype_dict=default_types):
     )
 
     def _bool_compare(array1, array2, output, comparison_mode, assign_mode):
-        if len(array1) != len(array2) or len(output) < len(array1) or len(
-                output) < len(array2):
+        if (
+            len(array1) != len(array2)
+            or len(output) < len(array1)
+            or len(output) < len(array2)
+        ):
             return
         if assign_mode == AssignOperator.ASSIGN:
             for i in range(len(array1)):
@@ -97,8 +102,7 @@ def bool_compare(mode, cache=True, dtype_dict=default_types):
                 elif comparison_mode == ComparisonOperator.le:
                     output[i] = output[i] | (array1[i] <= array2[i])
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_bool_compare)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(_bool_compare)
 
 
 def assign_elementwise(mode, cache=True, dtype_dict=default_types):
@@ -123,5 +127,6 @@ def assign_elementwise(mode, cache=True, dtype_dict=default_types):
             elif opt_mode == AssignOperator.BITWISE_OR:
                 output[i] = output[i] | array[i]
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_assign_elementwise)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(
+        _assign_elementwise
+    )

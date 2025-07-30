@@ -1,7 +1,14 @@
 import numpy as np
 import numba as nb
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
-from src.parallel_executors import cpu_parallel_calc_normal, cpu_parallel_calc_njit, gpu_kernel_device, cpu_parallel_calc_normal_wrapper, cpu_parallel_calc_njit_wrapper, gpu_kernel_device_wrapper
+from src.parallel_executors import (
+    cpu_parallel_calc_normal,
+    cpu_parallel_calc_njit,
+    gpu_kernel_device,
+    cpu_parallel_calc_normal_wrapper,
+    cpu_parallel_calc_njit_wrapper,
+    gpu_kernel_device_wrapper,
+)
 from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工具函数
 from utils.time_utils import time_wrapper
 from utils.data_types import default_types
@@ -9,7 +16,7 @@ from utils.numba_unpack import unpack_params, get_output, initialize_outputs
 import time
 
 
-def transform_data_recursive(data, mode='to_device'):
+def transform_data_recursive(data, mode="to_device"):
     """
     递归地根据模式转换嵌套的元组、列表和数组。
 
@@ -20,17 +27,16 @@ def transform_data_recursive(data, mode='to_device'):
     Returns:
         转换后的数据结构。
     """
-    if mode not in ['to_device', 'to_host']:
+    if mode not in ["to_device", "to_host"]:
         raise ValueError("mode 参数必须是 'to_device' 或 'to_host'")
 
     if isinstance(data, (tuple, list)):
         # 如果是元组或列表，递归处理其内部元素
-        return type(data)(transform_data_recursive(item, mode=mode)
-                          for item in data)
-    elif mode == 'to_device' and isinstance(data, np.ndarray):
+        return type(data)(transform_data_recursive(item, mode=mode) for item in data)
+    elif mode == "to_device" and isinstance(data, np.ndarray):
         # 如果是 NumPy 数组且模式为 'to_device'，传输到 CUDA 设备
         return nb.cuda.to_device(data)
-    elif mode == 'to_host' and isinstance(data, DeviceNDArray):
+    elif mode == "to_host" and isinstance(data, DeviceNDArray):
         # 如果是 CUDA 设备数组且模式为 'to_host'，拷贝回 CPU
         return data.copy_to_host()
     else:
@@ -39,27 +45,27 @@ def transform_data_recursive(data, mode='to_device'):
 
 
 def calculate(
-        mode,
-        tohlcv,
-        indicator_params,
-        indicator_enabled,
-        signal_params,
-        backtest_params,
-        tohlcv2=None,
-        indicator_params2=None,
-        indicator_enabled2=None,
-        mapping_data=None,
-        cache=False,
-        dtype_dict=default_types,
-        min_rows=0,  #最小填充数组行数
-        temp_int_num=1,
-        temp_float_num=1,
-        temp_bool_num=4,
-        core_time=False,
-        auto_tune_cuda_config=True,
-        cuda_tuning_params={},  # 收集所有传递给 auto_tune_cuda_parameters 的参数
+    mode,
+    tohlcv,
+    indicator_params,
+    indicator_enabled,
+    signal_params,
+    backtest_params,
+    tohlcv2=None,
+    indicator_params2=None,
+    indicator_enabled2=None,
+    mapping_data=None,
+    cache=False,
+    dtype_dict=default_types,
+    min_rows=0,  # 最小填充数组行数
+    temp_int_num=1,
+    temp_float_num=1,
+    temp_bool_num=4,
+    core_time=False,
+    auto_tune_cuda_config=True,
+    cuda_tuning_params={},  # 收集所有传递给 auto_tune_cuda_parameters 的参数
 ):
-    '''
+    """
     目前的设计来说,同一波并发,可以变的参数如下
     indicator_params,indicator_params2,backtest_params,都是二维数组
     同一波并发,不可变的参数如下
@@ -71,7 +77,7 @@ def calculate(
     3. 如果想启用指标探索的话,探索用循环就行了,优化用并发,既然探索用了循环,indicator_enabled就没必要在并发中可变了,循环中可变已经够用了
     4. 我更倾向于盘感驱动式量化交易(符合人的交易直觉),而不是像机械学习那样大规模探索指标和策略(看起来太黑箱了),所以indicator_enabled就没必要在并发中可变了,循环中可变已经够用了
     5. 为什么只有一个signal_params,如果用两个signal_params,是为了指标信号探索过程中的不同周期组合,这个就太复杂了(像机械学习),我只需要简单的信号模版选择功能就行了(盘感驱动的量化交易)
-    '''
+    """
     start_time = time.perf_counter()
 
     _conf_count = backtest_params.shape[0]
@@ -89,28 +95,40 @@ def calculate(
         # todo 待完善
         mapping_data = np.zeros_like(signal_params)
 
-    outputs = initialize_outputs(tohlcv,
-                                 tohlcv2,
-                                 indicator_params,
-                                 indicator_params2,
-                                 indicator_enabled,
-                                 indicator_enabled2,
-                                 _conf_count,
-                                 dtype_dict,
-                                 temp_int_num=temp_int_num,
-                                 temp_float_num=temp_float_num,
-                                 temp_bool_num=temp_bool_num,
-                                 min_rows=min_rows)
+    outputs = initialize_outputs(
+        tohlcv,
+        tohlcv2,
+        indicator_params,
+        indicator_params2,
+        indicator_enabled,
+        indicator_enabled2,
+        _conf_count,
+        dtype_dict,
+        temp_int_num=temp_int_num,
+        temp_float_num=temp_float_num,
+        temp_bool_num=temp_bool_num,
+        min_rows=min_rows,
+    )
 
-    cpu_params = unpack_params(outputs, tohlcv, tohlcv2, mapping_data,
-                               indicator_params, indicator_params2,
-                               indicator_enabled, indicator_enabled2,
-                               signal_params, backtest_params)
+    cpu_params = unpack_params(
+        outputs,
+        tohlcv,
+        tohlcv2,
+        mapping_data,
+        indicator_params,
+        indicator_params2,
+        indicator_enabled,
+        indicator_enabled2,
+        signal_params,
+        backtest_params,
+    )
     end_time = time.perf_counter()
     print("数据生成时间:", end_time - start_time)
 
     if mode == "normal":
-        _func = cpu_parallel_calc_normal_wrapper if core_time else cpu_parallel_calc_normal
+        _func = (
+            cpu_parallel_calc_normal_wrapper if core_time else cpu_parallel_calc_normal
+        )
         _cpu_parallel_calc = _func(cache=cache, dtype_dict=dtype_dict)
         _cpu_parallel_calc(cpu_params)
         return get_output(cpu_params)
@@ -125,20 +143,19 @@ def calculate(
         if auto_tune_cuda_config:
             threadsperblock, blockspergrid, max_registers = auto_tune_cuda_parameters(
                 workload_size=_conf_count,
-                **cuda_tuning_params  # 将所有额外的参数传递给自动调优函数
+                **cuda_tuning_params,  # 将所有额外的参数传递给自动调优函数
             )
         else:
             threadsperblock = 256
-            blockspergrid = (_conf_count +
-                             (threadsperblock - 1)) // threadsperblock
+            blockspergrid = (_conf_count + (threadsperblock - 1)) // threadsperblock
             if blockspergrid == 0:
                 blockspergrid = 1
             max_registers = None  # 保持默认值或根据您的需求设置
 
         _func = gpu_kernel_device_wrapper if core_time else gpu_kernel_device
-        _gpu_kernel_device = _func(cache=cache,
-                                   dtype_dict=dtype_dict,
-                                   max_registers=max_registers)
+        _gpu_kernel_device = _func(
+            cache=cache, dtype_dict=dtype_dict, max_registers=max_registers
+        )
         _gpu_kernel_device[blockspergrid, threadsperblock](gpu_params)
         nb.cuda.synchronize()
 

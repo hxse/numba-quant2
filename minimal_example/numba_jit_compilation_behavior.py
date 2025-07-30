@@ -34,15 +34,14 @@ process_array_cpu(arr_cpu_2x2, out_cpu_shape1)
 end_time = time.perf_counter()
 print(f"CPU: 第一次调用耗时: {end_time - start_time:.6f} 秒")
 print(f"CPU: 结果: {out_cpu_shape1[0]}")
-print(
-    f"CPU: process_array_cpu 是否已编译: {process_array_cpu.signatures is not None}"
-)
+print(f"CPU: process_array_cpu 是否已编译: {process_array_cpu.signatures is not None}")
 print("-" * 20)
 
 # 第二次调用：3x3 二维数组 (只改变形状，维度数仍为2)
 print("CPU: 第二次调用 (3x3 二维数组，形状改变)")
-arr_cpu_3x3 = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]],
-                       dtype=np.float32)
+arr_cpu_3x3 = np.array(
+    [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]], dtype=np.float32
+)
 out_cpu_shape2 = np.zeros(1, dtype=np.float32)
 
 start_time = time.perf_counter()

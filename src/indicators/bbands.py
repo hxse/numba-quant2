@@ -24,13 +24,20 @@ bbands_spec = {
 def calculate_bbands(mode, cache=True, dtype_dict=default_types):
     nb_int_type = dtype_dict["nb"]["int"]
     nb_float_type = dtype_dict["nb"]["float"]
-    signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type,
-                        nb_float_type[:], nb_float_type[:], nb_float_type[:])
+    signature = nb.void(
+        nb_float_type[:],
+        nb_int_type,
+        nb_float_type,
+        nb_float_type[:],
+        nb_float_type[:],
+        nb_float_type[:],
+    )
 
     _calculate_sma = calculate_sma(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _calculate_bbands(close, period, std_mult, middle_result, upper_result,
-                          lower_result):
+    def _calculate_bbands(
+        close, period, std_mult, middle_result, upper_result, lower_result
+    ):
         data_length = len(close)
         result_length = len(middle_result)  # 假设所有结果数组长度相同
 
@@ -57,13 +64,16 @@ def calculate_bbands(mode, cache=True, dtype_dict=default_types):
                 diff = close[i + j] - middle_result[i + period - 1]
                 variance += diff * diff
             std = math.sqrt(variance / period)
-            upper_result[i + period - 1] = (middle_result[i + period - 1] +
-                                            std_mult * std)
-            lower_result[i + period - 1] = (middle_result[i + period - 1] -
-                                            std_mult * std)
+            upper_result[i + period - 1] = (
+                middle_result[i + period - 1] + std_mult * std
+            )
+            lower_result[i + period - 1] = (
+                middle_result[i + period - 1] - std_mult * std
+            )
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_calculate_bbands)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(
+        _calculate_bbands
+    )
 
 
 def calculate_bbands_wrapper(mode, cache=True, dtype_dict=default_types):
@@ -71,20 +81,20 @@ def calculate_bbands_wrapper(mode, cache=True, dtype_dict=default_types):
     nb_float_type = dtype_dict["nb"]["float"]
     signature = nb.void(
         nb_float_type[:, :],  # tohlcv
-        nb.types.Tuple((nb_float_type[:], nb_float_type[:],
-                        nb_float_type[:])),  # indicator_params_child
-        nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
-                        nb_float_type[:, :])),  # indicator_result_child
-        nb_int_type  # _id
+        nb.types.Tuple(
+            (nb_float_type[:], nb_float_type[:], nb_float_type[:])
+        ),  # indicator_params_child
+        nb.types.Tuple(
+            (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+        ),  # indicator_result_child
+        nb_int_type,  # _id
     )
 
-    _calculate_bbands = calculate_bbands(mode,
-                                         cache=cache,
-                                         dtype_dict=dtype_dict)
+    _calculate_bbands = calculate_bbands(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _calculate_bbands_wrapper(tohlcv, indicator_params_child,
-                                  indicator_result_child, _id):
-
+    def _calculate_bbands_wrapper(
+        tohlcv, indicator_params_child, indicator_result_child, _id
+    ):
         time = tohlcv[:, 0]
         open = tohlcv[:, 1]
         high = tohlcv[:, 2]
@@ -103,8 +113,15 @@ def calculate_bbands_wrapper(mode, cache=True, dtype_dict=default_types):
         lower_result = bbands_indicator_result_child[:, 2]
 
         # bbands_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
-        _calculate_bbands(close, bbands_period, bbands_std_mult, middle_result,
-                          upper_result, lower_result)
+        _calculate_bbands(
+            close,
+            bbands_period,
+            bbands_std_mult,
+            middle_result,
+            upper_result,
+            lower_result,
+        )
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_calculate_bbands_wrapper)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(
+        _calculate_bbands_wrapper
+    )

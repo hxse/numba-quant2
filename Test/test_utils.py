@@ -29,8 +29,9 @@ def _count_leading_nans(arr: np.ndarray) -> int:
         return non_nan_indices[0]
 
 
-def get_leading_nan_counts_for_two_arrays(arr1: np.ndarray,
-                                          arr2: np.ndarray) -> Tuple[int, int]:
+def get_leading_nan_counts_for_two_arrays(
+    arr1: np.ndarray, arr2: np.ndarray
+) -> Tuple[int, int]:
     """
     计算两个 NumPy 数组开头 NaN 值的数量。
 
@@ -63,7 +64,8 @@ def assert_indicator_same(array1, array2, indicator_name, params_str):
         valid_indices = ~np.isnan(array1) & ~np.isnan(array2)
 
         array1_nan_count, array2_nan_count = get_leading_nan_counts_for_two_arrays(
-            array1, array2)
+            array1, array2
+        )
         print(
             f"{indicator_name} ({params_str}) array1_nan_count: {array1_nan_count} (type: {type(array1).__name__}) array2_nan_count: {array2_nan_count} (type: {type(array2).__name__})"
         )
@@ -72,12 +74,12 @@ def assert_indicator_same(array1, array2, indicator_name, params_str):
         )
 
         # 计算并打印最大差值，只考虑有效索引
-        max_diff = (np.max(
-            np.abs(array1[valid_indices] -
-                   array2[valid_indices])) if np.any(valid_indices) else 0.0)
-        print(
-            f"{indicator_name} ({params_str}) - Max difference: {max_diff:.4e}"
+        max_diff = (
+            np.max(np.abs(array1[valid_indices] - array2[valid_indices]))
+            if np.any(valid_indices)
+            else 0.0
         )
+        print(f"{indicator_name} ({params_str}) - Max difference: {max_diff:.4e}")
 
         np.testing.assert_allclose(
             array1[valid_indices],

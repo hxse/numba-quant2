@@ -10,16 +10,8 @@ def get_numba_data_types(enable64: bool = True):
     nb_float_type = nb.float64 if enable64 else nb.float32
     nb_bool_type = nb.boolean
     dtype_dict = {
-        "np": {
-            "int": np_int_type,
-            "float": np_float_type,
-            "bool": np_bool_type
-        },
-        "nb": {
-            "int": nb_int_type,
-            "float": nb_float_type,
-            "bool": nb_bool_type
-        }
+        "np": {"int": np_int_type, "float": np_float_type, "bool": np_bool_type},
+        "nb": {"int": nb_int_type, "float": nb_float_type, "bool": nb_bool_type},
     }
     return dtype_dict
 
@@ -28,106 +20,146 @@ default_types = get_numba_data_types(enable64=True)
 
 
 def get_params_signature(nb_int_type, nb_float_type, nb_bool_type):
-    return nb.types.Tuple((  # params
-        nb.types.Tuple((  # data_args
-            nb_float_type[:, :],  # tohlcv
-            nb_float_type[:, :],  # tohlcv2
-            nb_float_type[:, :],  # tohlcv_smooth
-            nb_float_type[:, :],  # tohlcv_smooth2
-            nb_int_type[:],  # mapping_data
-        )),
-        nb.types.Tuple((  # indicator_args
-            # indicator_params
-            nb.types.Tuple((
-                nb_float_type[:, :],  # sma_params
-                nb_float_type[:, :],  # sma2_params
-                nb_float_type[:, :],  # bbands_params
-            )),
-            # indicator_params2
-            nb.types.Tuple((
-                nb_float_type[:, :],  # sma_params2
-                nb_float_type[:, :],  # sma2_params2
-                nb_float_type[:, :],  # bbands_params2
-            )),
-            nb_bool_type[:],  # indicator_enabled
-            nb_bool_type[:],  # indicator_enabled2
-            # indicator_result
-            nb.types.Tuple((
-                nb_float_type[:, :, :],  # sma_result
-                nb_float_type[:, :, :],  # sma2_result
-                nb_float_type[:, :, :],  # bbands_result
-            )),
-            # indicator_result2
-            nb.types.Tuple((
-                nb_float_type[:, :, :],  # sma_result2
-                nb_float_type[:, :, :],  # sma2_result2
-                nb_float_type[:, :, :],  # bbands_result2
-            )),
-        )),
-        nb.types.Tuple((  # signal_args
-            nb_int_type[:],  # signal_params
-            nb_bool_type[:, :, :],  # signal_result
-        )),
-        nb.types.Tuple((  # backtest_args
-            nb_float_type[:, :],  # backtest_params
-            nb_float_type[:, :, :],  # backtest_result
-        )),
-        nb.types.Tuple((  # temp_args
-            nb_int_type[:, :, :],  # int_temp_array
-            nb_float_type[:, :, :],  # float_temp_array
-            nb_bool_type[:, :, :],  # bool_temp_array
-        )),
-    ))
+    return nb.types.Tuple(
+        (  # params
+            nb.types.Tuple(
+                (  # data_args
+                    nb_float_type[:, :],  # tohlcv
+                    nb_float_type[:, :],  # tohlcv2
+                    nb_float_type[:, :],  # tohlcv_smooth
+                    nb_float_type[:, :],  # tohlcv_smooth2
+                    nb_int_type[:],  # mapping_data
+                )
+            ),
+            nb.types.Tuple(
+                (  # indicator_args
+                    # indicator_params
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :],  # sma_params
+                            nb_float_type[:, :],  # sma2_params
+                            nb_float_type[:, :],  # bbands_params
+                        )
+                    ),
+                    # indicator_params2
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :],  # sma_params2
+                            nb_float_type[:, :],  # sma2_params2
+                            nb_float_type[:, :],  # bbands_params2
+                        )
+                    ),
+                    nb_bool_type[:],  # indicator_enabled
+                    nb_bool_type[:],  # indicator_enabled2
+                    # indicator_result
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :, :],  # sma_result
+                            nb_float_type[:, :, :],  # sma2_result
+                            nb_float_type[:, :, :],  # bbands_result
+                        )
+                    ),
+                    # indicator_result2
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :, :],  # sma_result2
+                            nb_float_type[:, :, :],  # sma2_result2
+                            nb_float_type[:, :, :],  # bbands_result2
+                        )
+                    ),
+                )
+            ),
+            nb.types.Tuple(
+                (  # signal_args
+                    nb_int_type[:],  # signal_params
+                    nb_bool_type[:, :, :],  # signal_result
+                )
+            ),
+            nb.types.Tuple(
+                (  # backtest_args
+                    nb_float_type[:, :],  # backtest_params
+                    nb_float_type[:, :, :],  # backtest_result
+                )
+            ),
+            nb.types.Tuple(
+                (  # temp_args
+                    nb_int_type[:, :, :],  # int_temp_array
+                    nb_float_type[:, :, :],  # float_temp_array
+                    nb_bool_type[:, :, :],  # bool_temp_array
+                )
+            ),
+        )
+    )
 
 
 def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
-    return nb.types.Tuple((  # params
-        nb.types.Tuple((  # data_args
-            nb_float_type[:, :],  # tohlcv
-            nb_float_type[:, :],  # tohlcv2
-            nb_float_type[:, :],  # tohlcv_smooth
-            nb_float_type[:, :],  # tohlcv_smooth2
-            nb_int_type[:],  # mapping_data
-        )),
-        nb.types.Tuple((  # indicator_args
-            # indicator_params
-            nb.types.Tuple((
-                nb_float_type[:],  # sma_params_child
-                nb_float_type[:],  # sma2_params_child
-                nb_float_type[:],  # bbands_params_child
-            )),
-            # indicator_params2
-            nb.types.Tuple((
-                nb_float_type[:],  # sma_params2_child
-                nb_float_type[:],  # sma2_params2_child
-                nb_float_type[:],  # bbands_params2_child
-            )),
-            nb_bool_type[:],  # indicator_enabled
-            nb_bool_type[:],  # indicator_enabled2
-            # indicator_result
-            nb.types.Tuple((
-                nb_float_type[:, :],  # sma_result_child
-                nb_float_type[:, :],  # sma2_result_child
-                nb_float_type[:, :],  # bbands_result_child
-            )),
-            # indicator_result2
-            nb.types.Tuple((
-                nb_float_type[:, :],  # sma_result2_child
-                nb_float_type[:, :],  # sma2_result2_child
-                nb_float_type[:, :],  # bbands_result2_child
-            )),
-        )),
-        nb.types.Tuple((  # signal_args
-            nb_int_type[:],  # signal_params
-            nb_bool_type[:, :],  # signal_result_child
-        )),
-        nb.types.Tuple((  # backtest_args
-            nb_float_type[:],  # backtest_params_child
-            nb_float_type[:, :],  # backtest_result_child
-        )),
-        nb.types.Tuple((  # temp_args
-            nb_int_type[:, :],  # int_temp_array_child
-            nb_float_type[:, :],  # float_temp_array_child
-            nb_bool_type[:, :],  # bool_temp_array_child
-        )),
-    ))
+    return nb.types.Tuple(
+        (  # params
+            nb.types.Tuple(
+                (  # data_args
+                    nb_float_type[:, :],  # tohlcv
+                    nb_float_type[:, :],  # tohlcv2
+                    nb_float_type[:, :],  # tohlcv_smooth
+                    nb_float_type[:, :],  # tohlcv_smooth2
+                    nb_int_type[:],  # mapping_data
+                )
+            ),
+            nb.types.Tuple(
+                (  # indicator_args
+                    # indicator_params
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:],  # sma_params_child
+                            nb_float_type[:],  # sma2_params_child
+                            nb_float_type[:],  # bbands_params_child
+                        )
+                    ),
+                    # indicator_params2
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:],  # sma_params2_child
+                            nb_float_type[:],  # sma2_params2_child
+                            nb_float_type[:],  # bbands_params2_child
+                        )
+                    ),
+                    nb_bool_type[:],  # indicator_enabled
+                    nb_bool_type[:],  # indicator_enabled2
+                    # indicator_result
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :],  # sma_result_child
+                            nb_float_type[:, :],  # sma2_result_child
+                            nb_float_type[:, :],  # bbands_result_child
+                        )
+                    ),
+                    # indicator_result2
+                    nb.types.Tuple(
+                        (
+                            nb_float_type[:, :],  # sma_result2_child
+                            nb_float_type[:, :],  # sma2_result2_child
+                            nb_float_type[:, :],  # bbands_result2_child
+                        )
+                    ),
+                )
+            ),
+            nb.types.Tuple(
+                (  # signal_args
+                    nb_int_type[:],  # signal_params
+                    nb_bool_type[:, :],  # signal_result_child
+                )
+            ),
+            nb.types.Tuple(
+                (  # backtest_args
+                    nb_float_type[:],  # backtest_params_child
+                    nb_float_type[:, :],  # backtest_result_child
+                )
+            ),
+            nb.types.Tuple(
+                (  # temp_args
+                    nb_int_type[:, :],  # int_temp_array_child
+                    nb_float_type[:, :],  # float_temp_array_child
+                    nb_bool_type[:, :],  # bool_temp_array_child
+                )
+            ),
+        )
+    )

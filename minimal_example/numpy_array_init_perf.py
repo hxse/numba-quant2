@@ -27,7 +27,7 @@ for i in range(num_runs):
     end_time = time.perf_counter()
     duration = end_time - start_time
     creation_times.append(duration)
-    print(f"第 {i+1} 次创建耗时: {duration:.6f} 秒")
+    print(f"第 {i + 1} 次创建耗时: {duration:.6f} 秒")
 
 print(f"平均创建耗时 (np.full): {np.mean(creation_times):.6f} 秒\n")
 
@@ -46,7 +46,9 @@ for i in range(num_runs):
     end_time = time.perf_counter()
     duration = end_time - start_time
     fill_times.append(duration)
-    print(f"第 {i+1} 次原地填充耗时: {duration:.6f} 秒")
+    print(f"第 {i + 1} 次原地填充耗时: {duration:.6f} 秒")
 
 print(f"平均原地填充耗时 (.fill()): {np.mean(fill_times):.6f} 秒")
-print(f"注意观察内存地址，确保是同一个数组被修改: {existing_array.__array_interface__['data'][0]}")
+print(
+    f"注意观察内存地址，确保是同一个数组被修改: {existing_array.__array_interface__['data'][0]}"
+)

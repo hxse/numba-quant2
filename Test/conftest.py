@@ -1,8 +1,10 @@
 import sys
 from pathlib import Path
 
-root_path = next((p for p in Path(__file__).resolve().parents
-                  if (p / "pyproject.toml").is_file()), None)
+root_path = next(
+    (p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file()),
+    None,
+)
 if root_path:
     sys.path.insert(0, str(root_path))
 
@@ -25,9 +27,7 @@ def df_data(dtype_dict):
     加载并提供 Pandas DataFrame 格式的 OHLCV 数据，用于模块内的所有测试。
     """
     micro_path = "database/live/BTC_USDT/15m/BTC_USDT_15m_20230228 160000.csv"
-    return load_tohlcv_from_csv(micro_path,
-                                data_size=None,
-                                dtype_dict=dtype_dict)
+    return load_tohlcv_from_csv(micro_path, data_size=None, dtype_dict=dtype_dict)
 
 
 @pytest.fixture(scope="module")

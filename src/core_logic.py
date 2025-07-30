@@ -11,12 +11,11 @@ def parallel_calc(mode, cache=True, dtype_dict=default_types):
     nb_bool_type = dtype_dict["nb"]["bool"]
 
     params_child_signature = get_params_child_signature(
-        nb_int_type, nb_float_type, nb_bool_type)
+        nb_int_type, nb_float_type, nb_bool_type
+    )
     signature = nb.void(params_child_signature)
 
-    _calc_indicators = calc_indicators(mode,
-                                       cache=cache,
-                                       dtype_dict=dtype_dict)
+    _calc_indicators = calc_indicators(mode, cache=cache, dtype_dict=dtype_dict)
 
     _calc_signal = calc_signal(mode, cache=cache, dtype_dict=dtype_dict)
 
@@ -24,5 +23,4 @@ def parallel_calc(mode, cache=True, dtype_dict=default_types):
         _calc_indicators(params_child)
         _calc_signal(params_child)
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_parallel_calc)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(_parallel_calc)

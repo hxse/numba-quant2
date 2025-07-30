@@ -6,7 +6,12 @@ from utils.data_types import default_types
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
-from .calculation_tool import bool_compare, assign_elementwise, ComparisonOperator as co, AssignOperator as ao
+from .calculation_tool import (
+    bool_compare,
+    assign_elementwise,
+    ComparisonOperator as co,
+    AssignOperator as ao,
+)
 
 
 def simple_signal(mode, cache=True, dtype_dict=default_types):
@@ -17,24 +22,33 @@ def simple_signal(mode, cache=True, dtype_dict=default_types):
     signature = nb.void(
         nb_float_type[:, :],  # tohlcv
         nb_float_type[:, :],  # tohlcv2
-        nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
-                        nb_float_type[:, :])),  # indicator_result_child
-        nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
-                        nb_float_type[:, :])),  # indicator_result2_child
+        nb.types.Tuple(
+            (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+        ),  # indicator_result_child
+        nb.types.Tuple(
+            (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+        ),  # indicator_result2_child
         nb_int_type[:],  # signal_params
         nb_bool_type[:, :],  # signal_result_child
-        nb.types.Tuple((
-            nb_int_type[:, :],  # int_temp_array_child
-            nb_float_type[:, :],  # float_temp_array_child
-            nb_bool_type[:, :],  # bool_temp_array_child
-        )),
+        nb.types.Tuple(
+            (
+                nb_int_type[:, :],  # int_temp_array_child
+                nb_float_type[:, :],  # float_temp_array_child
+                nb_bool_type[:, :],  # bool_temp_array_child
+            )
+        ),
     )
     _bool_compare = bool_compare(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _simple_signal(tohlcv, tohlcv2, indicator_result_child,
-                       indicator_result2_child, signal_params,
-                       signal_result_child, temp_args):
-
+    def _simple_signal(
+        tohlcv,
+        tohlcv2,
+        indicator_result_child,
+        indicator_result2_child,
+        signal_params,
+        signal_result_child,
+        temp_args,
+    ):
         close = tohlcv[:, 4]
 
         sma_indicator_result_child = indicator_result_child[sma_id]
@@ -50,52 +64,41 @@ def simple_signal(mode, cache=True, dtype_dict=default_types):
         sma2_result2 = sma2_indicator_result2_child[:, 0]
 
         enter_long_signal = signal_result_child[:, 0]
-        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
-                      ao.ASSIGN)
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.ASSIGN)
 
         exit_long_signal = signal_result_child[:, 1]
-        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
-                      ao.ASSIGN)
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.ASSIGN)
 
         enter_short_signal = signal_result_child[:, 2]
-        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
-                      ao.ASSIGN)
+        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.ASSIGN)
 
         exit_short_signal = signal_result_child[:, 3]
-        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
-                      ao.ASSIGN)
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.ASSIGN)
 
         enter_long_signal = signal_result_child[:, 0]
-        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
-                      ao.BITWISE_AND)
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_AND)
 
         exit_long_signal = signal_result_child[:, 1]
-        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
-                      ao.BITWISE_AND)
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_AND)
 
         enter_short_signal = signal_result_child[:, 2]
-        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
-                      ao.BITWISE_AND)
+        _bool_compare(
+            sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_AND
+        )
 
         exit_short_signal = signal_result_child[:, 3]
-        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
-                      ao.BITWISE_AND)
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_AND)
 
         enter_long_signal = signal_result_child[:, 0]
-        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt,
-                      ao.BITWISE_OR)
+        _bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_OR)
 
         exit_long_signal = signal_result_child[:, 1]
-        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt,
-                      ao.BITWISE_OR)
+        _bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_OR)
 
         enter_short_signal = signal_result_child[:, 2]
-        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt,
-                      ao.BITWISE_OR)
+        _bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_OR)
 
         exit_short_signal = signal_result_child[:, 3]
-        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt,
-                      ao.BITWISE_OR)
+        _bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_OR)
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_simple_signal)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(_simple_signal)

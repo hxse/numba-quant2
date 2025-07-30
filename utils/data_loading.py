@@ -5,9 +5,9 @@ from utils.data_types import default_types
 tohlcv_name = ["time", "open", "high", "low", "close", "volume"]
 
 
-def load_tohlcv_from_csv(file_path: str,
-                         data_size: int = None,
-                         dtype_dict=default_types) -> np.ndarray:
+def load_tohlcv_from_csv(
+    file_path: str, data_size: int = None, dtype_dict=default_types
+) -> np.ndarray:
     """
     从 CSV 文件加载 OHLCV 数据并进行处理。
 

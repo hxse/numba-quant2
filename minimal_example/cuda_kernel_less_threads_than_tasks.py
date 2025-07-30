@@ -43,8 +43,7 @@ def run_minimal_test():
 
     # 启动 GPU 核函数
     # [blocks_per_grid, threads_per_block] 定义了启动配置
-    simple_test_kernel[blocks_per_grid, threads_per_block](d_results,
-                                                           total_tasks)
+    simple_test_kernel[blocks_per_grid, threads_per_block](d_results, total_tasks)
 
     # 强制 GPU 同步，确保所有计算完成
     nb.cuda.synchronize()
@@ -57,11 +56,13 @@ def run_minimal_test():
 
     # 验证结果
     print("\n--- 验证 ---")
-    if np.array_equal(results_final[:total_threads_launched], np.arange(total_threads_launched) * 10 + 1) and \
-       np.all(results_final[total_threads_launched:] == -1):
+    if np.array_equal(
+        results_final[:total_threads_launched],
+        np.arange(total_threads_launched) * 10 + 1,
+    ) and np.all(results_final[total_threads_launched:] == -1):
         print(f"✅ 验证通过：只有前 {total_threads_launched} 个任务被处理了。")
         print(
-            f"   任务 {total_threads_launched} 到 {total_tasks-1} (即任务 4 到 9) 未被处理，值为 -1。"
+            f"   任务 {total_threads_launched} 到 {total_tasks - 1} (即任务 4 到 9) 未被处理，值为 -1。"
         )
     else:
         print("❌ 验证失败：结果不符合预期。")

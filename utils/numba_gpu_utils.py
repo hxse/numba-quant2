@@ -15,7 +15,7 @@ def get_gpu_properties():
             "max_registers_per_block": device.MAX_REGISTERS_PER_BLOCK,
             "max_shared_memory_per_block": device.MAX_SHARED_MEMORY_PER_BLOCK,
             "major": device.compute_capability[0],  # 添加计算能力主版本
-            "minor": device.compute_capability[1]  # 添加计算能力次版本
+            "minor": device.compute_capability[1],  # 添加计算能力次版本
         }
         return props
     except Exception as e:
@@ -23,17 +23,18 @@ def get_gpu_properties():
         return {}
 
 
-def calculate_optimal_threads_per_block(props,
-                                        shared_mem_per_thread=0,
-                                        max_desired_threads_per_block=512,
-                                        register_per_thread=24):
+def calculate_optimal_threads_per_block(
+    props,
+    shared_mem_per_thread=0,
+    max_desired_threads_per_block=512,
+    register_per_thread=24,
+):
     """
     根据 GPU 属性和核函数特性计算最优的 threadsperblock。
     """
     warp_size = props.get("warp_size", 32)
     max_threads_per_block = props.get("max_threads_per_block", 1024)
-    max_shared_memory_per_block = props.get("max_shared_memory_per_block",
-                                            49152)
+    max_shared_memory_per_block = props.get("max_shared_memory_per_block", 49152)
     max_registers_per_block = props.get("max_registers_per_block", 65536)
 
     # 启发式算法：
@@ -45,8 +46,7 @@ def calculate_optimal_threads_per_block(props,
         next_threads = optimal_threads * 2
         if next_threads > max_threads_per_block:
             break
-        if (next_threads *
-                shared_mem_per_thread) > max_shared_memory_per_block:
+        if (next_threads * shared_mem_per_thread) > max_shared_memory_per_block:
             break
         if register_per_thread is not None:
             # Numba CUDA 编译器的寄存器分配可能与实际运行时有所不同，但这里提供一个大致的限制
@@ -75,12 +75,14 @@ def calculate_optimal_threads_per_block(props,
     return optimal_threads
 
 
-def calculate_blocks_per_grid(props,
-                              threads_per_block,
-                              workload_size,
-                              min_waves=4,
-                              target_blocks_per_sm_small_workload=6,
-                              target_blocks_per_sm_large_workload=14):
+def calculate_blocks_per_grid(
+    props,
+    threads_per_block,
+    workload_size,
+    min_waves=4,
+    target_blocks_per_sm_small_workload=6,
+    target_blocks_per_sm_large_workload=14,
+):
     """
     计算 blockspergrid，优化 GPU 占用率以提高性能。
     """
@@ -88,8 +90,7 @@ def calculate_blocks_per_grid(props,
         raise ValueError("threads_per_block must be greater than 0")
 
     # 确保覆盖整个工作负载
-    required_blocks = (workload_size + threads_per_block -
-                       1) // threads_per_block
+    required_blocks = (workload_size + threads_per_block - 1) // threads_per_block
 
     multi_processor_count = props.get("multiprocessor_count", 1)
 
@@ -105,8 +106,9 @@ def calculate_blocks_per_grid(props,
     min_blocks_for_waves = min_waves * multi_processor_count * target_blocks_per_sm
 
     # 最终的 blockspergrid 取所需块数、理想占用块数和最小波块数的最大值
-    blocks_per_grid = max(required_blocks, ideal_blocks_for_occupancy,
-                          min_blocks_for_waves)
+    blocks_per_grid = max(
+        required_blocks, ideal_blocks_for_occupancy, min_blocks_for_waves
+    )
 
     # 确保覆盖整个工作负载的最小块数
     blocks_per_grid = max(blocks_per_grid, required_blocks)
@@ -119,16 +121,17 @@ def calculate_blocks_per_grid(props,
 
 
 def auto_tune_cuda_parameters(
-        workload_size,
-        max_desired_threads_per_block=512,
-        register_per_thread=24,
-        shared_mem_per_thread=0,
-        min_waves=4,
-        target_blocks_per_sm_small_workload=6,
-        target_blocks_per_sm_large_workload=14,
-        # 如果用户想手动指定 threadsperblock 或 blockspergrid
-        manual_threadsperblock=None,
-        manual_blockspergrid=None):
+    workload_size,
+    max_desired_threads_per_block=512,
+    register_per_thread=24,
+    shared_mem_per_thread=0,
+    min_waves=4,
+    target_blocks_per_sm_small_workload=6,
+    target_blocks_per_sm_large_workload=14,
+    # 如果用户想手动指定 threadsperblock 或 blockspergrid
+    manual_threadsperblock=None,
+    manual_blockspergrid=None,
+):
     """
     自动计算最优的 CUDA 核函数启动参数 (threadsperblock, blockspergrid)。
 
@@ -165,7 +168,8 @@ def auto_tune_cuda_parameters(
             props,
             max_desired_threads_per_block=max_desired_threads_per_block,
             shared_mem_per_thread=shared_mem_per_thread,
-            register_per_thread=register_per_thread)
+            register_per_thread=register_per_thread,
+        )
 
     if manual_blockspergrid is not None:
         blockspergrid = manual_blockspergrid
@@ -175,10 +179,9 @@ def auto_tune_cuda_parameters(
             threadsperblock,
             workload_size,
             min_waves=min_waves,
-            target_blocks_per_sm_small_workload=
-            target_blocks_per_sm_small_workload,
-            target_blocks_per_sm_large_workload=
-            target_blocks_per_sm_large_workload)
+            target_blocks_per_sm_small_workload=target_blocks_per_sm_small_workload,
+            target_blocks_per_sm_large_workload=target_blocks_per_sm_large_workload,
+        )
 
     # 将 register_per_thread 作为 max_registers_for_kernel 返回
     # 这样可以将其直接传递给 gpu_kernel_device

@@ -43,9 +43,9 @@ def run_minimal_test_with_stride_loop():
     d_results = nb.cuda.to_device(results_host)
 
     # 启动 GPU 核函数 (注意这里调用的是带有步进循环的新核函数)
-    simple_test_kernel_with_stride_loop[blocks_per_grid,
-                                        threads_per_block](d_results,
-                                                           total_tasks)
+    simple_test_kernel_with_stride_loop[blocks_per_grid, threads_per_block](
+        d_results, total_tasks
+    )
 
     # 强制 GPU 同步，确保所有计算完成
     nb.cuda.synchronize()

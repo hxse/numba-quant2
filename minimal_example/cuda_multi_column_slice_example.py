@@ -5,9 +5,9 @@ import numpy as np
 # --- 1. GPU设备函数：实际的计算和写入多列结果 ---
 @cuda.jit(device=True)
 def calculate_and_write_multiple_columns_device(
-        output_columns_slice,  # 现在接收一个二维切片，包含所有目标列
-        input_val,  # 输入值
-        kline_idx  # 当前K线索引
+    output_columns_slice,  # 现在接收一个二维切片，包含所有目标列
+    input_val,  # 输入值
+    kline_idx,  # 当前K线索引
 ):
     """
     这个设备函数现在接收一个**二维切片**，代表了多列结果。
@@ -43,18 +43,18 @@ def main_kernel(input_data, unified_output_array, start_col_idx, stop_col_idx):
         # unified_output_array[:, start_col_idx:stop_col_idx]
         # 得到的是一个二维 DeviceNDArray 视图，包含从 start_col_idx 到 stop_col_idx-1 的所有列。
         # 注意：Python 切片是左闭右开的。
-        target_columns_slice = unified_output_array[:,
-                                                    start_col_idx:stop_col_idx]
+        target_columns_slice = unified_output_array[:, start_col_idx:stop_col_idx]
 
         # --- 通过单个参数传递二维切片调用设备函数 ---
         calculate_and_write_multiple_columns_device(
             target_columns_slice,  # 传递包含所有目标列的二维切片
             data_val,
-            kline_idx)
+            kline_idx,
+        )
 
 
 # --- 3. CPU 端：准备数据和执行 ---
-if __name__ == '__main__':
+if __name__ == "__main__":
     N_KLINE = 5  # K线数量
     NUM_TOTAL_COLS = 10  # 统一结果数组的总列数
 
@@ -63,9 +63,7 @@ if __name__ == '__main__':
     d_input_data = cuda.to_device(input_data_cpu)
 
     # 预定义统一的二维结果数组
-    unified_results_cpu = np.full((N_KLINE, NUM_TOTAL_COLS),
-                                  np.nan,
-                                  dtype=np.float64)
+    unified_results_cpu = np.full((N_KLINE, NUM_TOTAL_COLS), np.nan, dtype=np.float64)
     d_unified_results = cuda.to_device(unified_results_cpu)
 
     # 指定我们希望写入的起始和结束列索引。
@@ -79,10 +77,9 @@ if __name__ == '__main__':
     blocks_per_grid = (N_KLINE + threads_per_block - 1) // threads_per_block
 
     print("--- 启动 CUDA Kernel ---")
-    main_kernel[blocks_per_grid,
-                threads_per_block](d_input_data, d_unified_results,
-                                   start_column_for_output,
-                                   stop_column_for_output)
+    main_kernel[blocks_per_grid, threads_per_block](
+        d_input_data, d_unified_results, start_column_for_output, stop_column_for_output
+    )
     cuda.synchronize()
 
     # 将结果拷贝回CPU
@@ -92,7 +89,7 @@ if __name__ == '__main__':
     print(input_data_cpu)
 
     print(
-        f"\n--- 统一结果数组 (包含计算结果，写入列 {start_column_for_output} 到 {stop_column_for_output-1}) ---"
+        f"\n--- 统一结果数组 (包含计算结果，写入列 {start_column_for_output} 到 {stop_column_for_output - 1}) ---"
     )
     print(final_results_host)
 
@@ -103,7 +100,8 @@ if __name__ == '__main__':
     expected_col0_in_slice = input_data_cpu * 2.0
     expected_col1_in_slice = input_data_cpu + 10.0
     print(
-        f"预期切片内第0列 (原始列 {start_column_for_output}): {expected_col0_in_slice}")
+        f"预期切片内第0列 (原始列 {start_column_for_output}): {expected_col0_in_slice}"
+    )
     print(
         f"预期切片内第1列 (原始列 {start_column_for_output + 1}): {expected_col1_in_slice}"
     )

@@ -49,8 +49,7 @@ def calculate_sma(mode, cache=True, dtype_dict=default_types):
 
             sma_result[i + period - 1] = sum_val / period
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_calculate_sma)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(_calculate_sma)
 
 
 def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
@@ -58,18 +57,20 @@ def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
     nb_float_type = dtype_dict["nb"]["float"]
     signature = nb.void(
         nb_float_type[:, :],  # tohlcv
-        nb.types.Tuple((nb_float_type[:], nb_float_type[:],
-                        nb_float_type[:])),  # indicator_params_child
-        nb.types.Tuple((nb_float_type[:, :], nb_float_type[:, :],
-                        nb_float_type[:, :])),  # indicator_result_child
-        nb_int_type  # _id
+        nb.types.Tuple(
+            (nb_float_type[:], nb_float_type[:], nb_float_type[:])
+        ),  # indicator_params_child
+        nb.types.Tuple(
+            (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+        ),  # indicator_result_child
+        nb_int_type,  # _id
     )
 
     _calculate_sma = calculate_sma(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _calculate_sma_wrapper(tohlcv, indicator_params_child,
-                               indicator_result_child, _id):
-
+    def _calculate_sma_wrapper(
+        tohlcv, indicator_params_child, indicator_result_child, _id
+    ):
         close = tohlcv[:, 4]
 
         sma_indicator_params_child = indicator_params_child[_id]
@@ -81,5 +82,6 @@ def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
         # sma_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
         _calculate_sma(close, sma_period, sma_result)
 
-    return numba_wrapper(mode, signature=signature,
-                         cache_enabled=cache)(_calculate_sma_wrapper)
+    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(
+        _calculate_sma_wrapper
+    )

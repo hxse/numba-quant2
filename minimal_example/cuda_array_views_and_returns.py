@@ -27,7 +27,7 @@ def get_row_tuple_indexed_OK(matrix, row_idx):
     """
     返回元组包裹的二维数组某一行（通过直接索引），这是允许的。
     """
-    return (matrix[row_idx], )
+    return (matrix[row_idx],)
 
 
 # --- 4. 设备函数：返回元组包裹的切片的一行 (可以工作) ---
@@ -36,7 +36,7 @@ def get_row_tuple_sliced_OK(matrix, row_idx):
     """
     返回元组包裹的二维数组某一行（通过切片），这是允许的。
     """
-    return (matrix[row_idx, :], )
+    return (matrix[row_idx, :],)
 
 
 # --- 通用处理函数：对获取到的行求和 ---
@@ -105,9 +105,9 @@ if __name__ == "__main__":
     print("--- 测试 1: 直接返回索引的行 (ERROR) ---")
     gpu_output_error1 = cuda.device_array(rows, dtype=np.float32)
     try:
-        kernel_test_direct_indexed_error[blocks_per_grid,
-                                         threads_per_block](gpu_input_matrix,
-                                                            gpu_output_error1)
+        kernel_test_direct_indexed_error[blocks_per_grid, threads_per_block](
+            gpu_input_matrix, gpu_output_error1
+        )
         cuda.synchronize()
         print("状态: 意外成功（请检查 Numba 版本或环境）\n")
     except nb.core.errors.TypingError:
@@ -119,9 +119,9 @@ if __name__ == "__main__":
     print("--- 测试 2: 直接返回切片的行 (ERROR) ---")
     gpu_output_error2 = cuda.device_array(rows, dtype=np.float32)
     try:
-        kernel_test_direct_sliced_error[blocks_per_grid,
-                                        threads_per_block](gpu_input_matrix,
-                                                           gpu_output_error2)
+        kernel_test_direct_sliced_error[blocks_per_grid, threads_per_block](
+            gpu_input_matrix, gpu_output_error2
+        )
         cuda.synchronize()
         print("状态: 意外成功（请检查 Numba 版本或环境）\n")
     except nb.core.errors.TypingError:
@@ -133,9 +133,9 @@ if __name__ == "__main__":
     print("--- 测试 3: 返回元组包裹的直接索引的行 (OK) ---")
     gpu_output_ok3 = cuda.device_array(rows, dtype=np.float32)
     try:
-        kernel_test_tuple_indexed_ok[blocks_per_grid,
-                                     threads_per_block](gpu_input_matrix,
-                                                        gpu_output_ok3)
+        kernel_test_tuple_indexed_ok[blocks_per_grid, threads_per_block](
+            gpu_input_matrix, gpu_output_ok3
+        )
         cuda.synchronize()
         cpu_output_ok3 = gpu_output_ok3.copy_to_host()
         expected_results = np.sum(cpu_input_matrix, axis=1)
@@ -150,9 +150,9 @@ if __name__ == "__main__":
     print("--- 测试 4: 返回元组包裹的切片的行 (OK) ---")
     gpu_output_ok4 = cuda.device_array(rows, dtype=np.float32)
     try:
-        kernel_test_tuple_sliced_ok[blocks_per_grid,
-                                    threads_per_block](gpu_input_matrix,
-                                                       gpu_output_ok4)
+        kernel_test_tuple_sliced_ok[blocks_per_grid, threads_per_block](
+            gpu_input_matrix, gpu_output_ok4
+        )
         cuda.synchronize()
         cpu_output_ok4 = gpu_output_ok4.copy_to_host()
         expected_results = np.sum(cpu_input_matrix, axis=1)

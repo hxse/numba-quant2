@@ -26,7 +26,9 @@ def cpu_1_layer_parallel_add(arr, val):
     一个只有一层 prange 并行的 Numba njit 函数（推荐的 CPU 并行方式）。
     """
     for i in nb.prange(arr.shape[0]):  # 只有第一层使用 prange
-        for j in range(arr.shape[1]):  # 第二层是普通循环，由每个外层 prange 线程顺序执行
+        for j in range(
+            arr.shape[1]
+        ):  # 第二层是普通循环，由每个外层 prange 线程顺序执行
             arr[i, j] += val
     return arr
 
@@ -78,8 +80,9 @@ def main():
 
     # 运行 CPU 2层并行 (执行不同任务)
     start_time = time.perf_counter()
-    cpu_2_layer_parallel_complex_ops(data_cpu_2_layer, val1_cpu_2_layer,
-                                     val2_cpu_2_layer)
+    cpu_2_layer_parallel_complex_ops(
+        data_cpu_2_layer, val1_cpu_2_layer, val2_cpu_2_layer
+    )
     end_time = time.perf_counter()
     print(f"CPU 2层并行执行时间 (不同任务): {end_time - start_time:.6f} 秒")
     # 初始值 1.0, 经过 +1.0 变为 2.0, 再经过 *2.0 变为 4.0. 校验和 = 4.0 * 2000 * 2000 = 16,000,000.0
@@ -101,16 +104,17 @@ def main():
 
     # --- GPU 1层并行 (每个线程处理一行) 配置 ---
     threads_per_block_1d = min(max_threads_per_block, array_size[0])
-    blocks_per_grid_1d = (array_size[0] + threads_per_block_1d -
-                          1) // threads_per_block_1d
+    blocks_per_grid_1d = (
+        array_size[0] + threads_per_block_1d - 1
+    ) // threads_per_block_1d
 
     data_cuda_1_layer = np.ones(array_size, dtype=np.float64)
     d_data_cuda_1_layer = numba.cuda.to_device(data_cuda_1_layer)
 
     start_time = time.perf_counter()
-    cuda_1_layer_parallel_add_kernel[blocks_per_grid_1d,
-                                     threads_per_block_1d](d_data_cuda_1_layer,
-                                                           add_value_cuda)
+    cuda_1_layer_parallel_add_kernel[blocks_per_grid_1d, threads_per_block_1d](
+        d_data_cuda_1_layer, add_value_cuda
+    )
     numba.cuda.synchronize()
     end_time = time.perf_counter()
     h_result_cuda_1_layer = d_data_cuda_1_layer.copy_to_host()
@@ -121,20 +125,21 @@ def main():
     threads_per_block_2d_x = int(np.sqrt(max_threads_per_block))
     threads_per_block_2d_y = int(np.sqrt(max_threads_per_block))
 
-    blocks_per_grid_2d_x = (array_size[0] + threads_per_block_2d_x -
-                            1) // threads_per_block_2d_x
-    blocks_per_grid_2d_y = (array_size[1] + threads_per_block_2d_y -
-                            1) // threads_per_block_2d_y
+    blocks_per_grid_2d_x = (
+        array_size[0] + threads_per_block_2d_x - 1
+    ) // threads_per_block_2d_x
+    blocks_per_grid_2d_y = (
+        array_size[1] + threads_per_block_2d_y - 1
+    ) // threads_per_block_2d_y
 
     data_cuda_2_layer = np.ones(array_size, dtype=np.float64)
     d_data_cuda_2_layer = numba.cuda.to_device(data_cuda_2_layer)
 
     start_time = time.perf_counter()
-    cuda_2_layer_parallel_add_kernel[(blocks_per_grid_2d_x,
-                                      blocks_per_grid_2d_y),
-                                     (threads_per_block_2d_x,
-                                      threads_per_block_2d_y)](
-                                          d_data_cuda_2_layer, add_value_cuda)
+    cuda_2_layer_parallel_add_kernel[
+        (blocks_per_grid_2d_x, blocks_per_grid_2d_y),
+        (threads_per_block_2d_x, threads_per_block_2d_y),
+    ](d_data_cuda_2_layer, add_value_cuda)
     numba.cuda.synchronize()
     end_time = time.perf_counter()
     h_result_cuda_2_layer = d_data_cuda_2_layer.copy_to_host()

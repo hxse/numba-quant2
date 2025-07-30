@@ -6,6 +6,7 @@ from src.indicators.sma import sma_spec, sma2_spec
 from src.indicators.bbands import bbands_spec
 
 
+
 def initialize_outputs(tohlcv,
                        tohlcv2,
                        indicator_params,

@@ -62,10 +62,9 @@ if __name__ == "__main__":
     for outer, inner, x_val, y_val, desc in test_cases_success:
         try:
             result = execute_equal_length_nested_jit_function(
-                outer, inner, x_val, y_val)
-            print(
-                f"调用 [{outer}][{inner}] ({desc}): {x_val} op {y_val} = {result}"
+                outer, inner, x_val, y_val
             )
+            print(f"调用 [{outer}][{inner}] ({desc}): {x_val} op {y_val} = {result}")
         except IndexError as e:
             print(f"调用 [{outer}][{inner}] ({desc}) 捕获到意外错误: {e}")
         except Exception as e:
@@ -77,8 +76,7 @@ if __name__ == "__main__":
 
     # 内部索引越界的用例
     try:
-        result_oob_inner = execute_equal_length_nested_jit_function(
-            0, 2, 10.0, 5.0)
+        result_oob_inner = execute_equal_length_nested_jit_function(0, 2, 10.0, 5.0)
         print(f"调用 [0][2] (内部越界): {result_oob_inner}")
     except IndexError as e:
         print(f"调用 [0][2] (内部越界) 捕获到预期错误: {e}")
@@ -87,8 +85,7 @@ if __name__ == "__main__":
 
     # 外部索引越界的用例
     try:
-        result_oob_outer = execute_equal_length_nested_jit_function(
-            3, 0, 10.0, 5.0)
+        result_oob_outer = execute_equal_length_nested_jit_function(3, 0, 10.0, 5.0)
         print(f"调用 [3][0] (外部越界): {result_oob_outer}")
     except IndexError as e:
         print(f"调用 [3][0] (外部越界) 捕获到预期错误: {e}")

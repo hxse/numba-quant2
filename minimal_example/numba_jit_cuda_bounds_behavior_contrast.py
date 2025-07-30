@@ -9,9 +9,7 @@ def my_func_cpu(args_sequence):
     CPU JIT 函数：接收一个序列，并尝试访问其元素。
     ***演示在越界访问时，Numba @njit 也会读取未定义值（类似 GPU）***
     """
-    print(
-        f"CPU JIT: Inside my_func_cpu, args_sequence received: {args_sequence}"
-    )
+    print(f"CPU JIT: Inside my_func_cpu, args_sequence received: {args_sequence}")
 
     # 场景 A: 越界访问
     # 假设我们传入的是 2 个元素的序列 [20, 30] (来自 my_array[1:3])
@@ -97,7 +95,7 @@ def main_cuda_kernel(output_array_gpu):
 
 
 # --- 主程序执行 ---
-if __name__ == '__main__':
+if __name__ == "__main__":
     # --- CPU 场景 ---
     # Numba @njit 在处理数组切片越界访问时，可能不会像标准 Python 那样抛出 IndexError
     # 而是会读取到内存中的值。因此，我们直接获取结果并验证。
@@ -106,11 +104,10 @@ if __name__ == '__main__':
 
     # 预期结果：20 (args_sequence[0]) + 30 (args_sequence[1]) + 40 (args_sequence[2] 越界读到) = 90
     expected_cpu_result = 90
-    assert cpu_output == expected_cpu_result, \
+    assert cpu_output == expected_cpu_result, (
         f"CPU JIT result mismatch! Expected {expected_cpu_result}, got {cpu_output}"
-    print(
-        f"CPU JIT result {cpu_output} confirms out-of-bounds read (similar to GPU)."
     )
+    print(f"CPU JIT result {cpu_output} confirms out-of-bounds read (similar to GPU).")
 
     # --- GPU 场景 ---
     print("\n--- GPU CUDA (numba.cuda.jit) 行为 ---")
@@ -130,8 +127,9 @@ if __name__ == '__main__':
 
     # 预期结果：20 (args_slice[0]) + 30 (args_slice[1]) + 40 (args_slice[2] 越界读到) = 90
     expected_gpu_result = 90
-    assert final_gpu_result[0] == expected_gpu_result, \
+    assert final_gpu_result[0] == expected_gpu_result, (
         f"GPU result mismatch! Expected {expected_gpu_result}, got {final_gpu_result[0]}"
+    )
     print("GPU CUDA result confirms out-of-bounds read (similar to CPU JIT).")
 
     print("\n--- 总结 ---")
