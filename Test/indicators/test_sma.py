@@ -5,7 +5,7 @@ import pytest
 from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same
 from utils.config_utils import get_params
-from src.interface import calculate
+from src.interface import entry_func
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 
 
@@ -47,7 +47,7 @@ def test_accuracy(
             int_temp_array,
             float_temp_array,
             bool_temp_array,
-        ) = calculate(
+        ) = entry_func(
             "njit",
             np_data,
             params["indicator_params"],

@@ -2,49 +2,20 @@ import numpy as np
 import numba as nb
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
 from src.parallel_executors import (
-    cpu_parallel_calc_normal,
-    cpu_parallel_calc_njit,
-    gpu_kernel_device,
-    cpu_parallel_calc_normal_wrapper,
-    cpu_parallel_calc_njit_wrapper,
-    gpu_kernel_device_wrapper,
+    parallel_calc,
+    # parallel_calc_normal,
+    # parallel_calc_njit,
+    # parallel_calc_cuda,
 )
 from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工具函数
 from utils.time_utils import time_wrapper
 from utils.data_types import default_types
 from utils.numba_unpack import unpack_params, get_output, initialize_outputs
+from utils.data_loading import transform_data_recursive
 import time
 
 
-def transform_data_recursive(data, mode="to_device"):
-    """
-    递归地根据模式转换嵌套的元组、列表和数组。
-
-    Args:
-        data: 待转换的嵌套数据结构（元组、列表或 NumPy/CUDA 数组）。
-        mode (str): 转换模式，可选值为 'to_device' (传输到 GPU) 或 'to_host' (拷贝回 CPU)。
-
-    Returns:
-        转换后的数据结构。
-    """
-    if mode not in ["to_device", "to_host"]:
-        raise ValueError("mode 参数必须是 'to_device' 或 'to_host'")
-
-    if isinstance(data, (tuple, list)):
-        # 如果是元组或列表，递归处理其内部元素
-        return type(data)(transform_data_recursive(item, mode=mode) for item in data)
-    elif mode == "to_device" and isinstance(data, np.ndarray):
-        # 如果是 NumPy 数组且模式为 'to_device'，传输到 CUDA 设备
-        return nb.cuda.to_device(data)
-    elif mode == "to_host" and isinstance(data, DeviceNDArray):
-        # 如果是 CUDA 设备数组且模式为 'to_host'，拷贝回 CPU
-        return data.copy_to_host()
-    else:
-        # 其他情况（如标量，或者不符合当前模式的数组类型），直接返回
-        return data
-
-
-def calculate(
+def entry_func(
     mode,
     tohlcv,
     indicator_params,
@@ -122,23 +93,39 @@ def calculate(
         signal_params,
         backtest_params,
     )
-    end_time = time.perf_counter()
-    print("数据生成时间:", end_time - start_time)
 
     if mode == "normal":
-        _func = (
-            cpu_parallel_calc_normal_wrapper if core_time else cpu_parallel_calc_normal
-        )
-        _cpu_parallel_calc = _func(cache=cache, dtype_dict=dtype_dict)
-        _cpu_parallel_calc(cpu_params)
+        end_time = time.perf_counter()
+        print("数据生成时间:", end_time - start_time)
+
+        def _launch(params):
+            parallel_calc(params)
+
+        if core_time:
+            timed_launch_func = time_wrapper(_launch)
+            timed_launch_func(cpu_params)
+        else:
+            _launch(cpu_params)
+
         return get_output(cpu_params)
     elif mode == "njit":
-        _func = cpu_parallel_calc_njit_wrapper if core_time else cpu_parallel_calc_njit
-        _cpu_parallel_calc = _func(cache=cache, dtype_dict=dtype_dict)
-        _cpu_parallel_calc(cpu_params)
+        end_time = time.perf_counter()
+        print("数据生成时间:", end_time - start_time)
+
+        def _launch(params):
+            parallel_calc(params)
+
+        if core_time:
+            timed_launch_func = time_wrapper(_launch)
+            timed_launch_func(cpu_params)
+        else:
+            _launch(cpu_params)
         return get_output(cpu_params)
     elif mode == "cuda":
         gpu_params = transform_data_recursive(cpu_params, mode="to_device")
+
+        end_time = time.perf_counter()
+        print("数据生成时间:", end_time - start_time)
 
         if auto_tune_cuda_config:
             threadsperblock, blockspergrid, max_registers = auto_tune_cuda_parameters(
@@ -152,12 +139,15 @@ def calculate(
                 blockspergrid = 1
             max_registers = None  # 保持默认值或根据您的需求设置
 
-        _func = gpu_kernel_device_wrapper if core_time else gpu_kernel_device
-        _gpu_kernel_device = _func(
-            cache=cache, dtype_dict=dtype_dict, max_registers=max_registers
-        )
-        _gpu_kernel_device[blockspergrid, threadsperblock](gpu_params)
-        nb.cuda.synchronize()
+        def _launch(params):
+            parallel_calc[blockspergrid, threadsperblock](params)
+            nb.cuda.synchronize()
+
+        if core_time:
+            timed_launch_func = time_wrapper(_launch)
+            timed_launch_func(gpu_params)
+        else:
+            _launch(gpu_params)
 
         return transform_data_recursive(get_output(gpu_params), mode="to_host")
     else:
@@ -165,5 +155,5 @@ def calculate(
 
 
 @time_wrapper
-def calculate_time_wrapper(*args, **kwargs):
-    return calculate(*args, **kwargs)
+def entry_func_wrapper(*args, **kwargs):
+    return entry_func(*args, **kwargs)

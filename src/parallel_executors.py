@@ -1,33 +1,32 @@
 import numpy as np
 import numba as nb
-from src.core_logic import parallel_calc
-from utils.numba_utils import numba_wrapper
+from src.core_logic import core_calc
 from utils.data_types import default_types, get_params_signature
-from utils.time_utils import time_wrapper
 from utils.numba_unpack import unpack_params_child, get_conf_count
 
 
-def cpu_parallel_calc_normal(
-    cache=True,
-    dtype_dict=default_types,
-):
-    """
-    工具函数版本运行失败
-    """
-    mode = "normal"
-    nb_int_type = dtype_dict["nb"]["int"]
-    nb_float_type = dtype_dict["nb"]["float"]
-    nb_bool_type = dtype_dict["nb"]["bool"]
+from utils.numba_params import nb_params
+from utils.data_types import get_numba_data_types
+from utils.numba_utils import nb_wrapper
 
-    params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
-    signature = nb.void(params_signature)
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
 
-    _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
-    _unpack_params_child = unpack_params_child(mode, cache=cache, dtype_dict=dtype_dict)
+params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
+signature = nb.void(params_signature)
 
-    _parallel_calc = parallel_calc(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _cpu_parallel_calc_normal(params):
+if nb_params["mode"] == "normal":
+
+    @nb_wrapper(
+        mode=nb_params["mode"],
+        signature=signature,
+        cache_enabled=nb_params.get("cache", True),
+        parallel=True,
+    )
+    def parallel_calc(params):
         (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
 
         (
@@ -39,7 +38,7 @@ def cpu_parallel_calc_normal(
             indicator_result2,
         ) = indicator_args
 
-        conf_count = _get_conf_count(params)
+        conf_count = get_conf_count(params)
 
         for idx in nb.prange(conf_count):
             _indicator_args = (
@@ -57,35 +56,19 @@ def cpu_parallel_calc_normal(
                 backtest_args,
                 temp_args,
             )
-            _params_child = _unpack_params_child(_params, idx)
+            _params_child = unpack_params_child(_params, idx)
 
-            _parallel_calc(_params_child)
+            core_calc(_params_child)
 
-    return numba_wrapper(mode, signature=signature, cache_enabled=cache, parallel=True)(
-        _cpu_parallel_calc_normal
+elif nb_params["mode"] == "njit":
+
+    @nb_wrapper(
+        mode=nb_params["mode"],
+        signature=signature,
+        cache_enabled=nb_params.get("cache", True),
+        parallel=True,
     )
-
-
-@time_wrapper
-def cpu_parallel_calc_normal_wrapper(*args, **kargs):
-    return cpu_parallel_calc_normal(*args, **kargs)
-
-
-def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
-    mode = "njit"
-    nb_int_type = dtype_dict["nb"]["int"]
-    nb_float_type = dtype_dict["nb"]["float"]
-    nb_bool_type = dtype_dict["nb"]["bool"]
-
-    params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
-    signature = nb.void(params_signature)
-
-    _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
-    _unpack_params_child = unpack_params_child(mode, cache=cache, dtype_dict=dtype_dict)
-
-    _parallel_calc = parallel_calc(mode, cache=cache, dtype_dict=dtype_dict)
-
-    def _cpu_parallel_calc_njit(params):
+    def parallel_calc(params):
         (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
 
         (
@@ -97,7 +80,7 @@ def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
             indicator_result2,
         ) = indicator_args
 
-        conf_count = _get_conf_count(params)
+        conf_count = get_conf_count(params)
 
         for idx in nb.prange(conf_count):
             _indicator_args = (
@@ -115,35 +98,20 @@ def cpu_parallel_calc_njit(cache=True, dtype_dict=default_types):
                 backtest_args,
                 temp_args,
             )
-            _params_child = _unpack_params_child(_params, idx)
+            _params_child = unpack_params_child(_params, idx)
 
-            _parallel_calc(_params_child)
+            core_calc(_params_child)
 
-    return numba_wrapper(mode, signature=signature, cache_enabled=cache, parallel=True)(
-        _cpu_parallel_calc_njit
+
+elif nb_params["mode"] == "cuda":
+
+    @nb_wrapper(
+        mode=nb_params["mode"],
+        signature=signature,
+        cache_enabled=nb_params.get("cache", True),
+        parallel=True,
     )
-
-
-@time_wrapper
-def cpu_parallel_calc_njit_wrapper(*args, **kargs):
-    return cpu_parallel_calc_njit(*args, **kargs)
-
-
-def gpu_kernel_device(cache=True, dtype_dict=default_types, max_registers=None):
-    mode = "cuda"
-    nb_int_type = dtype_dict["nb"]["int"]
-    nb_float_type = dtype_dict["nb"]["float"]
-    nb_bool_type = dtype_dict["nb"]["bool"]
-
-    params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
-    signature = nb.void(params_signature)
-
-    _get_conf_count = get_conf_count(mode, cache=cache, dtype_dict=dtype_dict)
-    _unpack_params_child = unpack_params_child(mode, cache=cache, dtype_dict=dtype_dict)
-
-    _parallel_calc = parallel_calc(mode, cache=cache, dtype_dict=dtype_dict)
-
-    def _gpu_kernel_device(params):
+    def parallel_calc(params):
         (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
 
         (
@@ -155,7 +123,7 @@ def gpu_kernel_device(cache=True, dtype_dict=default_types, max_registers=None):
             indicator_result2,
         ) = indicator_args
 
-        conf_count = _get_conf_count(params)
+        conf_count = get_conf_count(params)
 
         # 获取当前线程的唯一ID（起始索引）
         start_idx = nb.cuda.grid(1)
@@ -181,19 +149,6 @@ def gpu_kernel_device(cache=True, dtype_dict=default_types, max_registers=None):
                 backtest_args,
                 temp_args,
             )
-            _params_child = _unpack_params_child(_params, idx)
+            _params_child = unpack_params_child(_params, idx)
 
-            _parallel_calc(_params_child)
-
-    return numba_wrapper(
-        mode,
-        signature=signature,
-        cache_enabled=cache,
-        parallel=True,
-        max_registers=max_registers,
-    )(_gpu_kernel_device)
-
-
-@time_wrapper
-def gpu_kernel_device_wrapper(*args, **kargs):
-    return gpu_kernel_device(*args, **kargs)
+            core_calc(_params_child)

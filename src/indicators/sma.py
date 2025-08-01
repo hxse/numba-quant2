@@ -2,7 +2,10 @@ import numba as nb
 import numpy as np
 from utils.numba_utils import numba_wrapper
 from utils.data_types import default_types
+
+
 from enum import Enum
+
 
 sma_id = 0
 sma_name = "sma"
@@ -22,66 +25,72 @@ sma_spec = {
 sma2_spec = {**sma_spec, "id": sma2_id, "name": sma2_name}
 
 
-def calculate_sma(mode, cache=True, dtype_dict=default_types):
-    nb_int_type = dtype_dict["nb"]["int"]
-    nb_float_type = dtype_dict["nb"]["float"]
-    signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type[:])
+from utils.numba_params import nb_params
+from utils.data_types import get_numba_data_types
+from utils.numba_utils import nb_wrapper
 
-    def _calculate_sma(close, period, sma_result):
-        data_length = len(close)
-        result_length = len(sma_result)
-
-        # 越界检查
-        if result_length < data_length:
-            return
-
-        # 越界检查
-        if period <= 0 or data_length < period or result_length < period:
-            return
-
-        for i in range(period - 1):
-            sma_result[i] = np.nan
-
-        for i in range(data_length - period + 1):
-            sum_val = 0.0
-            for j in range(period):
-                sum_val += close[i + j]
-
-            sma_result[i + period - 1] = sum_val / period
-
-    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(_calculate_sma)
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
 
 
-def calculate_sma_wrapper(mode, cache=True, dtype_dict=default_types):
-    nb_int_type = dtype_dict["nb"]["int"]
-    nb_float_type = dtype_dict["nb"]["float"]
-    signature = nb.void(
-        nb_float_type[:, :],  # tohlcv
-        nb.types.Tuple(
-            (nb_float_type[:], nb_float_type[:], nb_float_type[:])
-        ),  # indicator_params_child
-        nb.types.Tuple(
-            (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
-        ),  # indicator_result_child
-        nb_int_type,  # _id
-    )
+signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type[:])
 
-    _calculate_sma = calculate_sma(mode, cache=cache, dtype_dict=dtype_dict)
 
-    def _calculate_sma_wrapper(
-        tohlcv, indicator_params_child, indicator_result_child, _id
-    ):
-        close = tohlcv[:, 4]
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature,
+    cache_enabled=nb_params.get("cache", True),
+)
+def calculate_sma(close, period, sma_result):
+    data_length = len(close)
+    result_length = len(sma_result)
 
-        sma_indicator_params_child = indicator_params_child[_id]
-        sma_indicator_result_child = indicator_result_child[_id]
+    # 越界检查
+    if result_length < data_length:
+        return
 
-        sma_period = sma_indicator_params_child[0]
-        sma_result = sma_indicator_result_child[:, 0]
+    # 越界检查
+    if period <= 0 or data_length < period or result_length < period:
+        return
 
-        # sma_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
-        _calculate_sma(close, sma_period, sma_result)
+    for i in range(period - 1):
+        sma_result[i] = np.nan
 
-    return numba_wrapper(mode, signature=signature, cache_enabled=cache)(
-        _calculate_sma_wrapper
-    )
+    for i in range(data_length - period + 1):
+        sum_val = 0.0
+        for j in range(period):
+            sum_val += close[i + j]
+
+        sma_result[i + period - 1] = sum_val / period
+
+
+signature = nb.void(
+    nb_float_type[:, :],  # tohlcv
+    nb.types.Tuple(
+        (nb_float_type[:], nb_float_type[:], nb_float_type[:])
+    ),  # indicator_params_child
+    nb.types.Tuple(
+        (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+    ),  # indicator_result_child
+    nb_int_type,  # _id
+)
+
+
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature,
+    cache_enabled=nb_params.get("cache", True),
+)
+def calculate_sma_wrapper(tohlcv, indicator_params_child, indicator_result_child, _id):
+    close = tohlcv[:, 4]
+
+    sma_indicator_params_child = indicator_params_child[_id]
+    sma_indicator_result_child = indicator_result_child[_id]
+
+    sma_period = sma_indicator_params_child[0]
+    sma_result = sma_indicator_result_child[:, 0]
+
+    # sma_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
+    calculate_sma(close, sma_period, sma_result)

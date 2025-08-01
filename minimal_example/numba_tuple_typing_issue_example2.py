@@ -8,6 +8,8 @@ nb_float_type = nb.float64
 Array2D = nb.float64[:, :]
 Array3D = nb.float64[:, :, :]
 
+cache = False
+
 # 模拟那个 UniTuple(array(float64, 2d, A) x 4)
 UniTupleOfArrays4x2D = nb.types.UniTuple(Array2D, 4)
 
@@ -45,7 +47,7 @@ FunctionInputPackedArgsType = nb.types.Tuple(
 # --- 2. 模拟辅助函数 ---
 
 
-@nb.njit(FlattenedParamsType(nb.typeof(None)), cache=True)
+@nb.njit(FlattenedParamsType(nb.typeof(None)), cache=cache)
 def _unpack_flatten_simulated(params):
     # 模拟返回一个包含 UniTuple 的元组
     arr1 = np.ones((100, 2), dtype=np.float64)
@@ -69,7 +71,7 @@ def _unpack_flatten_simulated(params):
         FunctionInputPackedArgsType,  # params元组的类型
         nb_int_type,  # idx的类型
     ),
-    cache=True,
+    cache=cache,
 )
 def _unpack_flatten_idx_simulated(params_tuple, idx):
     # 在函数内部解包或通过索引访问
@@ -120,7 +122,7 @@ def _unpack_flatten_idx_simulated(params_tuple, idx):
         ),
         nb.float64[:],  # 新增的输出数组参数
     ),
-    cache=True,
+    cache=cache,
 )
 def _parallel_calc_simulated(params_child, out_array_row):
     _data_args, indicator_args_child, _signal_args_child, _backtest_args_child = (
@@ -149,7 +151,7 @@ def _parallel_calc_simulated(params_child, out_array_row):
 def run_test_case(test_mode):
     print(f"\n--- Running Test Case: {test_mode} ---")
 
-    _get_conf_count = nb.njit(nb.int64(nb.typeof(None)), cache=True)(lambda p: 100)
+    _get_conf_count = nb.njit(nb.int64(nb.typeof(None)), cache=cache)(lambda p: 100)
     _unpack_flatten = _unpack_flatten_simulated
     _unpack_flatten_idx = _unpack_flatten_idx_simulated  # 统一使用这个函数
     _parallel_calc = _parallel_calc_simulated
@@ -297,4 +299,4 @@ def run_test_case(test_mode):
 # --- 运行测试案例 ---
 run_test_case("JIT-Internal Direct Tuple Pass")  # 正常
 # run_test_case("JIT-Internal Indexed Tuple Construction")  # 预计会报错
-# run_test_case("JIT-Internal Implied Tuple From Unpack") # 预计会报错
+# run_test_case("JIT-Internal Implied Tuple From Unpack")  # 预计会报错
