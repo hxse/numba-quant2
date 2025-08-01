@@ -28,4 +28,3 @@ signature = nb.void(params_child_signature)
 def core_calc(params_child):
     calc_indicators(params_child)
     calc_signal(params_child)
-    pass

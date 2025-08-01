@@ -4,8 +4,6 @@ from utils.numba_utils import numba_wrapper
 from utils.data_types import default_types
 from utils.data_types import default_types, get_params_child_signature
 
-from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
-from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 from src.signal.simple_template import simple_signal
 
 

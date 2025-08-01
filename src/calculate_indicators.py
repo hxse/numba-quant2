@@ -1,10 +1,9 @@
 import numba as nb
 import numpy as np
-from utils.numba_utils import numba_wrapper
 from utils.data_types import default_types, get_params_child_signature
 from src.indicators.sma import calculate_sma_wrapper, sma_id, sma2_id
 from src.indicators.bbands import calculate_bbands_wrapper, bbands_id
-
+from src.indicators.atr import calculate_atr_wrapper, atr_id
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
@@ -44,15 +43,37 @@ def calc_indicators(params_child):
 
     if indicator_enabled[sma_id]:
         calculate_sma_wrapper(
-            tohlcv, indicator_params_child, indicator_result_child, sma_id
+            tohlcv,
+            indicator_params_child,
+            indicator_result_child,
+            float_temp_array_child,
+            sma_id,
         )
 
     if indicator_enabled[sma2_id]:
         calculate_sma_wrapper(
-            tohlcv, indicator_params_child, indicator_result_child, sma2_id
+            tohlcv,
+            indicator_params_child,
+            indicator_result_child,
+            float_temp_array_child,
+            sma2_id,
         )
 
     if indicator_enabled[bbands_id]:
         calculate_bbands_wrapper(
-            tohlcv, indicator_params_child, indicator_result_child, bbands_id
+            tohlcv,
+            indicator_params_child,
+            indicator_result_child,
+            float_temp_array_child,
+            bbands_id,
+        )
+
+    print("atr id", atr_id, indicator_enabled)
+    if indicator_enabled[atr_id]:
+        calculate_atr_wrapper(
+            tohlcv,
+            indicator_params_child,
+            indicator_result_child,
+            float_temp_array_child,
+            atr_id,
         )

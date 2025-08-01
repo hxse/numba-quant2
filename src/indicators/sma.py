@@ -1,8 +1,6 @@
 import numba as nb
 import numpy as np
-from utils.numba_utils import numba_wrapper
-from utils.data_types import default_types
-
+from utils.data_types import indicator_params_child, indicator_result_child
 
 from enum import Enum
 
@@ -68,12 +66,13 @@ def calculate_sma(close, period, sma_result):
 
 signature = nb.void(
     nb_float_type[:, :],  # tohlcv
-    nb.types.Tuple(
-        (nb_float_type[:], nb_float_type[:], nb_float_type[:])
+    indicator_params_child(
+        nb_int_type, nb_float_type, nb_bool_type
     ),  # indicator_params_child
-    nb.types.Tuple(
-        (nb_float_type[:, :], nb_float_type[:, :], nb_float_type[:, :])
+    indicator_result_child(
+        nb_int_type, nb_float_type, nb_bool_type
     ),  # indicator_result_child
+    nb_float_type[:, :],  # float_temp_array_child
     nb_int_type,  # _id
 )
 
@@ -83,7 +82,9 @@ signature = nb.void(
     signature=signature,
     cache_enabled=nb_params.get("cache", True),
 )
-def calculate_sma_wrapper(tohlcv, indicator_params_child, indicator_result_child, _id):
+def calculate_sma_wrapper(
+    tohlcv, indicator_params_child, indicator_result_child, float_temp_array_child, _id
+):
     close = tohlcv[:, 4]
 
     sma_indicator_params_child = indicator_params_child[_id]

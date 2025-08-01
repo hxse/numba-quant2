@@ -4,6 +4,9 @@ import numpy as np
 
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
+from src.indicators.atr import atr_id, atr_name, atr_spec
+
+indicator_count = atr_id + 1  # 最大的指标id值+1
 
 
 def get_dtype_dict(enable64=True):
@@ -61,9 +64,6 @@ def get_params(
     }
 
 
-indicator_count = 3
-
-
 def get_indicator_params(
     num: int = 1, update_params: dict = {}, dtype_dict=default_dtype_dict
 ) -> dict:
@@ -85,6 +85,7 @@ def get_indicator_params(
         sma_name: sma_spec,
         sma2_name: sma2_spec,
         bbands_name: bbands_spec,
+        atr_name: atr_spec,
     }
     assert indicator_count == len(default_template.keys()), (
         f"指标数量不匹配 {indicator_count} {len(default_template.keys())}"

@@ -46,6 +46,7 @@ def main(
         sma2_spec,
     )
     from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
+    from src.indicators.atr import atr_id, atr_name, atr_spec
 
     end_time = time.time()
     print(f"numba模块导入冷启动时间: {end_time - start_time:.4f} 秒")
@@ -76,16 +77,22 @@ def main(
         df_data2, np_data2 = perpare_data(
             path2, data_size=data_size, dtype_dict=dtype_dict
         )
-        num = 1000
+        num = 1
         params = get_params(
             num=num,
             indicator_update={
                 sma_name: [[14] for i in range(num)],
                 sma2_name: [[50] for i in range(num)],
                 bbands_name: [[20, 2.0] for i in range(num)],
+                atr_name: [[14] for i in range(num)],
             },
             signal_params=[0, 0],
-            indicator_enabled={sma_id: True, sma2_id: True, bbands_id: True},
+            indicator_enabled={
+                # sma_id: True,
+                # sma2_id: True,
+                # bbands_id: True,
+                atr_id: True,
+            },
             dtype_dict=dtype_dict,
         )
 
@@ -129,10 +136,12 @@ def main(
 
         if i != 0:
             print(f"{mode} out_arrays length:", len(backtest_result))
-            # print(f"{mode} indicator_result:", indicator_result)
+            print(f"{mode} indicator_result:", indicator_result)
             # print(f"{mode} indicator_result2:", indicator_result2)
             # print(f"{mode} signal_result:", signal_result)
+            import pdb
 
+            pdb.set_trace()
         if total_time:
             print(f"Task {i} total_time: {time.time() - start_time:.4f} seconds")
 
