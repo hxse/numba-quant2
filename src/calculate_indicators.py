@@ -68,7 +68,6 @@ def calc_indicators(params_child):
             bbands_id,
         )
 
-    print("atr id", atr_id, indicator_enabled)
     if indicator_enabled[atr_id]:
         calculate_atr_wrapper(
             tohlcv,

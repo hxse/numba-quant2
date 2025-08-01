@@ -136,12 +136,10 @@ def main(
 
         if i != 0:
             print(f"{mode} out_arrays length:", len(backtest_result))
-            print(f"{mode} indicator_result:", indicator_result)
+            # print(f"{mode} indicator_result:", indicator_result)
             # print(f"{mode} indicator_result2:", indicator_result2)
             # print(f"{mode} signal_result:", signal_result)
-            import pdb
 
-            pdb.set_trace()
         if total_time:
             print(f"Task {i} total_time: {time.time() - start_time:.4f} seconds")
 
