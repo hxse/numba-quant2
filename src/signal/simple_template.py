@@ -5,7 +5,7 @@ from utils.data_types import get_indicator_params_child, get_indicator_result_ch
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
-from .calculation_tool import (
+from .signal_tool import (
     bool_compare,
     assign_elementwise,
     ComparisonOperator as co,
@@ -73,37 +73,30 @@ def simple_signal(
     sma2_result2 = sma2_indicator_result2_child[:, 0]
 
     enter_long_signal = signal_result_child[:, 0]
+    exit_long_signal = signal_result_child[:, 1]
+    enter_short_signal = signal_result_child[:, 2]
+    exit_short_signal = signal_result_child[:, 3]
+
     bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.ASSIGN)
 
-    exit_long_signal = signal_result_child[:, 1]
     bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.ASSIGN)
 
-    enter_short_signal = signal_result_child[:, 2]
     bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.ASSIGN)
 
-    exit_short_signal = signal_result_child[:, 3]
     bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.ASSIGN)
 
-    enter_long_signal = signal_result_child[:, 0]
     bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_AND)
 
-    exit_long_signal = signal_result_child[:, 1]
     bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_AND)
 
-    enter_short_signal = signal_result_child[:, 2]
     bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_AND)
 
-    exit_short_signal = signal_result_child[:, 3]
     bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_AND)
 
-    enter_long_signal = signal_result_child[:, 0]
     bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_OR)
 
-    exit_long_signal = signal_result_child[:, 1]
     bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_OR)
 
-    enter_short_signal = signal_result_child[:, 2]
     bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_OR)
 
-    exit_short_signal = signal_result_child[:, 3]
     bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_OR)

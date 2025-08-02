@@ -12,6 +12,9 @@ from utils.time_utils import time_wrapper
 from utils.data_types import get_numba_data_types
 from utils.numba_unpack import unpack_params, get_output, initialize_outputs
 from utils.data_loading import transform_data_recursive
+
+from utils.numba_params import nb_params
+
 import time
 
 default_dtype_dict = get_numba_data_types(enable64=True)
@@ -36,7 +39,6 @@ def entry_func(
     temp_bool_num=4,
     core_time=False,
     auto_tune_cuda_config=True,
-    cuda_tuning_params={},  # 收集所有传递给 auto_tune_cuda_parameters 的参数
 ):
     """
     目前的设计来说,同一波并发,可以变的参数如下
@@ -65,8 +67,7 @@ def entry_func(
         indicator_enabled2 = np.zeros_like(indicator_enabled)
 
     if mapping_data is None:
-        # todo 待完善
-        mapping_data = np.zeros_like(signal_params)
+        mapping_data = np.zeros(tohlcv.shape[0], dtype=dtype_dict["np"]["int"])
 
     outputs = initialize_outputs(
         tohlcv,
@@ -130,9 +131,9 @@ def entry_func(
         print("数据生成时间:", end_time - start_time)
 
         if auto_tune_cuda_config:
-            threadsperblock, blockspergrid, max_registers = auto_tune_cuda_parameters(
+            (threadsperblock, blockspergrid, max_registers) = auto_tune_cuda_parameters(
+                register_per_thread=nb_params.get("max_registers", 24),
                 workload_size=_conf_count,
-                **cuda_tuning_params,  # 将所有额外的参数传递给自动调优函数
             )
         else:
             threadsperblock = 256

@@ -5,6 +5,8 @@ from utils.data_types import (
     get_indicator_result_child,
     get_indicator_wrapper_signal,
 )
+from .indicators_tool import check_bounds
+
 import math
 from .sma import calculate_sma
 from enum import Enum
@@ -53,17 +55,11 @@ signature = nb.void(
 def calculate_bbands(
     close, period, std_mult, middle_result, upper_result, lower_result
 ):
-    data_length = len(close)
-    result_length = len(middle_result)  # 假设所有结果数组长度相同
-
     # 越界检查
-    if result_length < data_length:
+    if check_bounds(close, period, middle_result) == 0:
         return
 
-    # 越界检查
-    if period <= 0 or data_length < period or result_length < period:
-        return
-
+    # 计算sma
     calculate_sma(close, period, middle_result)
 
     # 对于前 period - 1 个元素，填充 np.nan

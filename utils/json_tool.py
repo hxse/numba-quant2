@@ -20,9 +20,15 @@ def write_numba_config(
     mode: str = "njit",
     cache: bool = True,
     enable64: bool = True,
+    max_registers: int = 24,
 ):
     """将 Numba 配置写入临时 JSON 文件。"""
-    config_to_write = {"mode": mode, "cache": cache, "enable64": enable64}
+    config_to_write = {
+        "mode": mode,
+        "cache": cache,
+        "enable64": enable64,
+        "max_registers": max_registers,
+    }
     with open(path, "w", encoding="utf-8") as file:
         json.dump(config_to_write, file, ensure_ascii=False, indent=4)
 
@@ -35,8 +41,11 @@ def load_numba_config(
     mode: str = "njit",
     cache: bool = True,
     enable64: bool = True,
+    max_registers: int = 24,
 ):
-    write_numba_config(mode=mode, cache=cache, enable64=enable64)
+    write_numba_config(
+        mode=mode, cache=cache, enable64=enable64, max_registers=max_registers
+    )
 
     from utils.numba_params import nb_params
 

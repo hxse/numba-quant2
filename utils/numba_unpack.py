@@ -1,6 +1,6 @@
 import numpy as np
 import numba as nb
-from utils.numba_utils import numba_wrapper, nb_wrapper
+from utils.numba_utils import nb_wrapper
 from utils.data_types import (
     get_params_signature,
     get_params_child_signature,

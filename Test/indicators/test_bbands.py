@@ -23,7 +23,12 @@ def test_accuracy(
     close = np_data[:, 4]
     volume = np_data[:, 5]
 
+    time_series = df_data["time"]
+    open_series = df_data["open"]
+    high_series = df_data["high"]
+    low_series = df_data["low"]
     close_series = df_data["close"]
+    volume_series = df_data["volume"]
 
     params_array = [[10, 2.0], [20, 2.5], [30, 3.0]]
 
@@ -104,8 +109,12 @@ def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
     比较 pandas-ta 和 talib 计算的 SMA 结果是否相同。
     预期结果是相同，所以使用 assert_indicator_same。
     """
-
+    time_series = df_data["time"]
+    open_series = df_data["open"]
+    high_series = df_data["high"]
+    low_series = df_data["low"]
     close_series = df_data["close"]
+    volume_series = df_data["volume"]
 
     params_array = [[10, 2.0], [20, 2.5], [30, 3.0]]
 

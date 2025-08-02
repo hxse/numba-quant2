@@ -5,6 +5,7 @@ from utils.data_types import (
     get_indicator_result_child,
     get_indicator_wrapper_signal,
 )
+from .indicators_tool import check_bounds
 
 from enum import Enum
 
@@ -46,16 +47,11 @@ signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type[:])
     cache_enabled=nb_params.get("cache", True),
 )
 def calculate_sma(close, period, sma_result):
+    # 越界检查
+    if check_bounds(close, period, sma_result) == 0:
+        return
+
     data_length = len(close)
-    result_length = len(sma_result)
-
-    # 越界检查
-    if result_length < data_length:
-        return
-
-    # 越界检查
-    if period <= 0 or data_length < period or result_length < period:
-        return
 
     for i in range(period - 1):
         sma_result[i] = np.nan

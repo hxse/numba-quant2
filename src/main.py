@@ -22,6 +22,7 @@ def main(
     core_time: bool = True,
     task_time: bool = True,
     total_time: bool = False,
+    max_registers: int = 24,
 ):
     """
     pre_run 控制是否执行第一次迭代 (预运行)
@@ -30,7 +31,9 @@ def main(
     core_time 内核运行的时间
     """
     # 加载numba_config临时配置文件
-    nb_params = load_numba_config(mode=mode, cache=cache, enable64=enable64)
+    nb_params = load_numba_config(
+        mode=mode, cache=cache, enable64=enable64, max_registers=max_registers
+    )
 
     # 确保加载完numba_config后再import numba
     start_time = time.time()
@@ -88,13 +91,23 @@ def main(
                 atr_name: [[14] for i in range(num)],
                 psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
             },
-            signal_params=[0, 0],
             indicator_enabled={
-                # sma_id: True,
-                # sma2_id: True,
+                sma_id: True,
+                sma2_id: True,
                 # bbands_id: True,
                 # atr_id: True,
-                psar_id: True,
+                # psar_id: True,
+            },
+            signal_params=[0, 0],
+            indicator_update2={
+                sma_name: [[14] for i in range(num)],
+            },
+            indicator_enabled2={
+                sma_id: True,
+                sma2_id: True,
+                # bbands_id: True,
+                # atr_id: True,
+                # psar_id: True,
             },
             dtype_dict=dtype_dict,
         )
@@ -128,10 +141,10 @@ def main(
             params["indicator_enabled"],
             params["signal_params"],
             params["backtest_params"],
-            #   tohlcv2=np_data2,
-            #   indicator_params2=params["indicator_params2"],
-            #   indicator_enabled2=params["indicator_enabled2"],
-            # mapping_data=params["mapping_data"],
+            tohlcv2=np_data2,
+            indicator_params2=params["indicator_params2"],
+            indicator_enabled2=params["indicator_enabled2"],
+            mapping_data=params["mapping_data"],
             cache=cache,
             dtype_dict=dtype_dict,
             core_time=core_time,
@@ -142,6 +155,9 @@ def main(
             # print(f"{mode} indicator_result:", indicator_result)
             # print(f"{mode} indicator_result2:", indicator_result2)
             # print(f"{mode} signal_result:", signal_result)
+            import pdb
+
+            pdb.set_trace()
 
         if total_time:
             print(f"Task {i} total_time: {time.time() - start_time:.4f} seconds")

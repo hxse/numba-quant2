@@ -88,7 +88,6 @@ def test_pandas_ta_and_talib_atr_same(df_data, dtype_dict):
     比较 pandas-ta 和 talib 计算的 SMA 结果是否相同。
     预期结果是相同，所以使用 assert_indicator_same。
     """
-
     time_series = df_data["time"]
     open_series = df_data["open"]
     high_series = df_data["high"]

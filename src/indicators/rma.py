@@ -22,7 +22,7 @@ import numpy as np
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
-
+from .indicators_tool import check_bounds
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
@@ -39,6 +39,10 @@ signature = nb.void(nb_float_type[:], nb_int_type, nb_float_type[:])
     cache_enabled=nb_params.get("cache", True),
 )
 def calculate_rma(close, period, rma_result):
+    # 越界检查
+    if check_bounds(close, period, rma_result) == 0:
+        return
+
     n = len(close)
 
     # 填充前 period 个结果为 NaN。

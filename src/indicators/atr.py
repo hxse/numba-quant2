@@ -8,6 +8,8 @@ from utils.data_types import (
     get_indicator_wrapper_signal,
 )
 
+from .indicators_tool import check_bounds
+
 from enum import Enum
 
 
@@ -52,6 +54,10 @@ signature = nb.void(
     cache_enabled=nb_params.get("cache", True),
 )
 def calculate_atr(high, low, close, period, atr_result, tr_result):
+    # 越界检查
+    if check_bounds(close, period, atr_result) == 0:
+        return
+
     # 这里不需要初始化 result 为 NaN，因为 rma_func 应该负责填充
     # tr_result 也由 tr_func 填充，所以这里的初始化也可以移除，但为了安全保留
     atr_result[:] = np.nan

@@ -7,6 +7,7 @@ from utils.data_types import (
     get_indicator_result_child,
     get_indicator_wrapper_signal,
 )
+from .indicators_tool import check_bounds
 
 from enum import Enum
 
@@ -72,6 +73,10 @@ def calculate_psar(
     psar_af_result,
     psar_reversal_result,
 ):
+    # 越界检查
+    if check_bounds(close, 1, psar_long_result) == 0:
+        return
+
     n = len(close)
 
     # 初始化结果数组为 NaN

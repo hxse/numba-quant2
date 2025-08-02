@@ -9,6 +9,7 @@ from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
 
+
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
 nb_float_type = dtype_dict["nb"]["float"]
@@ -110,6 +111,7 @@ elif nb_params["mode"] == "cuda":
         signature=signature,
         cache_enabled=nb_params.get("cache", True),
         parallel=True,
+        max_registers=nb_params.get("max_registers", 24),
     )
     def parallel_calc(params):
         (data_args, indicator_args, signal_args, backtest_args, temp_args) = params

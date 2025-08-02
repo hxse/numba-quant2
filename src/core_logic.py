@@ -2,6 +2,7 @@ import numba as nb
 from utils.data_types import get_params_child_signature
 from .calculate_indicators import calc_indicators
 from .calculate_signals import calc_signal
+from .calculate_backtest import calc_backtest
 
 
 from utils.numba_params import nb_params
@@ -28,3 +29,4 @@ signature = nb.void(params_child_signature)
 def core_calc(params_child):
     calc_indicators(params_child)
     calc_signal(params_child)
+    calc_backtest(params_child)
