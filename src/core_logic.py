@@ -1,5 +1,5 @@
 import numba as nb
-from utils.data_types import default_types, get_params_child_signature
+from utils.data_types import get_params_child_signature
 from .calculate_indicators import calc_indicators
 from .calculate_signals import calc_signal
 

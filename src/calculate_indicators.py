@@ -1,9 +1,10 @@
 import numba as nb
 import numpy as np
-from utils.data_types import default_types, get_params_child_signature
+from utils.data_types import get_params_child_signature
 from src.indicators.sma import calculate_sma_wrapper, sma_id, sma2_id
 from src.indicators.bbands import calculate_bbands_wrapper, bbands_id
 from src.indicators.atr import calculate_atr_wrapper, atr_id
+from src.indicators.psar import calculate_psar_wrapper, psar_id
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
@@ -41,38 +42,20 @@ def calc_indicators(params_child):
     (backtest_params_child, backtest_result_child) = backtest_args
     (int_temp_array_child, float_temp_array_child, bool_temp_array_child) = temp_args
 
-    if indicator_enabled[sma_id]:
-        calculate_sma_wrapper(
-            tohlcv,
-            indicator_params_child,
-            indicator_result_child,
-            float_temp_array_child,
-            sma_id,
-        )
+    id_arr = (sma_id, sma2_id, bbands_id, atr_id, psar_id)
+    func_arr = (
+        calculate_sma_wrapper,
+        calculate_sma_wrapper,
+        calculate_bbands_wrapper,
+        calculate_atr_wrapper,
+        calculate_psar_wrapper,
+    )
 
-    if indicator_enabled[sma2_id]:
-        calculate_sma_wrapper(
+    for i in range(len(id_arr)):
+        func_arr[i](
             tohlcv,
             indicator_params_child,
             indicator_result_child,
             float_temp_array_child,
-            sma2_id,
-        )
-
-    if indicator_enabled[bbands_id]:
-        calculate_bbands_wrapper(
-            tohlcv,
-            indicator_params_child,
-            indicator_result_child,
-            float_temp_array_child,
-            bbands_id,
-        )
-
-    if indicator_enabled[atr_id]:
-        calculate_atr_wrapper(
-            tohlcv,
-            indicator_params_child,
-            indicator_result_child,
-            float_temp_array_child,
-            atr_id,
+            id_arr[i],
         )

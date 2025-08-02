@@ -47,6 +47,7 @@ def main(
     )
     from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
     from src.indicators.atr import atr_id, atr_name, atr_spec
+    from src.indicators.psar import psar_id, psar_name, psar_spec
 
     end_time = time.time()
     print(f"numba模块导入冷启动时间: {end_time - start_time:.4f} 秒")
@@ -85,13 +86,15 @@ def main(
                 sma2_name: [[50] for i in range(num)],
                 bbands_name: [[20, 2.0] for i in range(num)],
                 atr_name: [[14] for i in range(num)],
+                psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
             },
             signal_params=[0, 0],
             indicator_enabled={
                 # sma_id: True,
                 # sma2_id: True,
                 # bbands_id: True,
-                atr_id: True,
+                # atr_id: True,
+                psar_id: True,
             },
             dtype_dict=dtype_dict,
         )

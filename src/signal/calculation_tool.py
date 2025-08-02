@@ -1,7 +1,5 @@
 import numba as nb
 import numpy as np
-from utils.numba_utils import numba_wrapper
-from utils.data_types import default_types
 from enum import IntEnum, auto
 
 from utils.numba_params import nb_params

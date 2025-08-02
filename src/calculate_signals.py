@@ -1,8 +1,7 @@
 import numba as nb
 import numpy as np
 from utils.numba_utils import numba_wrapper
-from utils.data_types import default_types
-from utils.data_types import default_types, get_params_child_signature
+from utils.data_types import get_params_child_signature
 
 from src.signal.simple_template import simple_signal
 

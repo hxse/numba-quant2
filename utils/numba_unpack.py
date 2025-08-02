@@ -2,7 +2,6 @@ import numpy as np
 import numba as nb
 from utils.numba_utils import numba_wrapper, nb_wrapper
 from utils.data_types import (
-    default_types,
     get_params_signature,
     get_params_child_signature,
 )
@@ -12,6 +11,7 @@ from utils.data_types import get_numba_data_types
 from src.indicators.sma import sma_spec, sma2_spec
 from src.indicators.bbands import bbands_spec
 from src.indicators.atr import atr_id, atr_name, atr_spec
+from src.indicators.psar import psar_id, psar_name, psar_spec
 
 
 def initialize_outputs(
@@ -62,11 +62,6 @@ def initialize_outputs(
     tohlcv_smooth2 = np.full(tohlcv2_shape, np.nan, dtype=np_float_type)
 
     # --- Indicator Result Arrays ---
-    sma_output_dim = sma_spec["result_count"]
-    sma2_output_dim = sma2_spec["result_count"]
-    bbands_output_dim = bbands_spec["result_count"]
-    atr_output_dim = atr_spec["result_count"]
-
     signal_output_dim = 4
     backtest_output_dim = 10
     temp_float_num = max(
@@ -74,27 +69,36 @@ def initialize_outputs(
         sma_spec["temp_count"] + sma2_spec["temp_count"] + bbands_spec["temp_count"],
     )
 
+    sma_output_dim = sma_spec["result_count"]
     sma_rows = tohlcv_rows if indicator_enabled[sma_spec["id"]] else min_rows
     sma_result = np.full(
         (conf_count, sma_rows, sma_output_dim), np.nan, dtype=np_float_type
     )
 
+    sma2_output_dim = sma2_spec["result_count"]
     sma2_rows = tohlcv_rows if indicator_enabled[sma2_spec["id"]] else min_rows
     sma2_result = np.full(
         (conf_count, sma2_rows, sma2_output_dim), np.nan, dtype=np_float_type
     )
 
+    bbands_output_dim = bbands_spec["result_count"]
     bbands_rows = tohlcv_rows if indicator_enabled[bbands_spec["id"]] else min_rows
     bbands_result = np.full(
         (conf_count, bbands_rows, bbands_output_dim), np.nan, dtype=np_float_type
     )
 
+    atr_output_dim = atr_spec["result_count"]
     atr_rows = tohlcv_rows if indicator_enabled[atr_spec["id"]] else min_rows
     atr_result = np.full(
         (conf_count, atr_rows, atr_output_dim), np.nan, dtype=np_float_type
     )
 
-    indicator_result = (sma_result, sma2_result, bbands_result, atr_result)
+    psar_output_dim = psar_spec["result_count"]
+    psar_rows = tohlcv_rows if indicator_enabled[psar_spec["id"]] else min_rows
+    psar_result = np.full(
+        (conf_count, psar_rows, psar_output_dim), np.nan, dtype=np_float_type
+    )
+    indicator_result = (sma_result, sma2_result, bbands_result, atr_result, psar_result)
 
     sma_rows2 = tohlcv2_rows if indicator_enabled2[sma_spec["id"]] else min_rows
     sma_result2 = np.full(
@@ -116,7 +120,18 @@ def initialize_outputs(
         (conf_count, atr_rows2, atr_output_dim), np.nan, dtype=np_float_type
     )
 
-    indicator_result2 = (sma_result2, sma2_result2, bbands_result2, atr_result2)
+    psar_rows2 = tohlcv2_rows if indicator_enabled2[psar_spec["id"]] else min_rows
+    psar_result2 = np.full(
+        (conf_count, psar_rows2, atr_output_dim), np.nan, dtype=np_float_type
+    )
+
+    indicator_result2 = (
+        sma_result2,
+        sma2_result2,
+        bbands_result2,
+        atr_result2,
+        psar_result2,
+    )
 
     # --- Signal Result Arrays ---
     signal_result = np.full(
@@ -228,34 +243,42 @@ def unpack_params_child(params, idx):
     (backtest_params, backtest_result) = backtest_args
     (int_temp_array, float_temp_array, bool_temp_array) = temp_args
 
-    (sma_params, sma2_params, bbands_params, atr_params) = indicator_params
-    (sma_params2, sma2_params2, bbands_params2, atr_params2) = indicator_params2
-    (sma_result, sma2_result, bbands_result, atr_result) = indicator_result
-    (sma_result2, sma2_result2, bbands_result2, atr_result2) = indicator_result2
+    (sma_params, sma2_params, bbands_params, atr_params, psar_params) = indicator_params
+    (sma_params2, sma2_params2, bbands_params2, atr_params2, psar_params2) = (
+        indicator_params2
+    )
+    (sma_result, sma2_result, bbands_result, atr_result, psar_result) = indicator_result
+    (sma_result2, sma2_result2, bbands_result2, atr_result2, psar_result2) = (
+        indicator_result2
+    )
 
     indicator_params_child = (
         sma_params[idx],
         sma2_params[idx],
         bbands_params[idx],
         atr_params[idx],
+        psar_params[idx],
     )
     indicator_params2_child = (
         sma_params2[idx],
         sma2_params2[idx],
         bbands_params2[idx],
         atr_params2[idx],
+        psar_params2[idx],
     )
     indicator_result_child = (
         sma_result[idx],
         sma2_result[idx],
         bbands_result[idx],
         atr_result[idx],
+        psar_result[idx],
     )
     indicator_result2_child = (
         sma_result2[idx],
         sma2_result2[idx],
         bbands_result2[idx],
         atr_result2[idx],
+        psar_result2[idx],
     )
 
     indicator_args_child = (

@@ -9,10 +9,12 @@ from src.parallel_executors import (
 )
 from utils.numba_gpu_utils import auto_tune_cuda_parameters  # 导入新的工具函数
 from utils.time_utils import time_wrapper
-from utils.data_types import default_types
+from utils.data_types import get_numba_data_types
 from utils.numba_unpack import unpack_params, get_output, initialize_outputs
 from utils.data_loading import transform_data_recursive
 import time
+
+default_dtype_dict = get_numba_data_types(enable64=True)
 
 
 def entry_func(
@@ -27,7 +29,7 @@ def entry_func(
     indicator_enabled2=None,
     mapping_data=None,
     cache=False,
-    dtype_dict=default_types,
+    dtype_dict=default_dtype_dict,
     min_rows=0,  # 最小填充数组行数
     temp_int_num=1,
     temp_float_num=1,

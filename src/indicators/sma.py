@@ -1,6 +1,10 @@
 import numba as nb
 import numpy as np
-from utils.data_types import indicator_params_child, indicator_result_child
+from utils.data_types import (
+    get_indicator_params_child,
+    get_indicator_result_child,
+    get_indicator_wrapper_signal,
+)
 
 from enum import Enum
 
@@ -65,15 +69,7 @@ def calculate_sma(close, period, sma_result):
 
 
 signature = nb.void(
-    nb_float_type[:, :],  # tohlcv
-    indicator_params_child(
-        nb_int_type, nb_float_type, nb_bool_type
-    ),  # indicator_params_child
-    indicator_result_child(
-        nb_int_type, nb_float_type, nb_bool_type
-    ),  # indicator_result_child
-    nb_float_type[:, :],  # float_temp_array_child
-    nb_int_type,  # _id
+    *get_indicator_wrapper_signal(nb_int_type, nb_float_type, nb_bool_type)
 )
 
 

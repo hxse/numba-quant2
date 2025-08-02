@@ -1,14 +1,17 @@
 import numpy as np
 import numba as nb
 import pandas as pd
-from utils.data_types import default_types
+from utils.data_types import get_numba_data_types
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
 
 tohlcv_name = ["time", "open", "high", "low", "close", "volume"]
 
 
+default_dtype_dict = get_numba_data_types(enable64=True)
+
+
 def load_tohlcv_from_csv(
-    file_path: str, data_size: int = None, dtype_dict=default_types
+    file_path: str, data_size: int = None, dtype_dict=default_dtype_dict
 ) -> np.ndarray:
     """
     从 CSV 文件加载 OHLCV 数据并进行处理。
@@ -38,7 +41,7 @@ def load_tohlcv_from_csv(
     return df
 
 
-def convert_tohlcv_numpy(df, dtype_dict=default_types):
+def convert_tohlcv_numpy(df, dtype_dict=default_dtype_dict):
     return df[tohlcv_name].to_numpy().astype(dtype_dict["np"]["float"])
 
 

@@ -1,6 +1,6 @@
 import numba as nb
 import numpy as np
-from utils.data_types import indicator_params_child, indicator_result_child
+from utils.data_types import get_indicator_params_child, get_indicator_result_child
 
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
@@ -26,10 +26,10 @@ nb_bool_type = dtype_dict["nb"]["bool"]
 signature = nb.void(
     nb_float_type[:, :],  # tohlcv
     nb_float_type[:, :],  # tohlcv2
-    indicator_result_child(
+    get_indicator_result_child(
         nb_int_type, nb_float_type, nb_bool_type
     ),  # indicator_result_child
-    indicator_result_child(
+    get_indicator_result_child(
         nb_int_type, nb_float_type, nb_bool_type
     ),  # indicator_result2_child
     nb_int_type[:],  # signal_params
