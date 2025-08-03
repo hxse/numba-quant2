@@ -44,9 +44,11 @@ PsarState = nb.types.Tuple((nb_bool_type, nb_float_type, nb_float_type, nb_float
 
 # --- PSAR 初始化函数 ---
 signature_init = PsarState(
-    nb_float_type[:],  # high (至少需要前两根 K 线)
-    nb_float_type[:],  # low (至少需要前两根 K 线)
-    nb_float_type[:],  # close (至少需要前两根 K 线)
+    nb_float_type,  # high_prev
+    nb_float_type,  # high_curr
+    nb_float_type,  # low_prev
+    nb_float_type,  # low_curr
+    nb_float_type,  # close_prev
     nb_float_type,  # af0
     nb_int_type,  # force_direction_int
 )
@@ -57,15 +59,14 @@ signature_init = PsarState(
     signature=signature_init,
     cache_enabled=nb_params.get("cache", True),
 )
-def psar_init(high, low, close, af0, force_direction_int):
+def psar_init(
+    high_prev, high_curr, low_prev, low_curr, close_prev, af0, force_direction_int
+):
     """
     初始化 PSAR 算法的初始状态，可强制指定初始方向。
-    需要至少两根 K 线数据来确定初始趋势。
+    直接接收所需的标量数据。
     返回一个元组：(is_long, current_psar, current_ep, current_af)
     """
-    if len(close) < 2:
-        # 返回一个带有 NaN 的元组，确保 Numba 类型一致性
-        return (False, np.nan, np.nan, np.nan)
 
     is_long = False
     if force_direction_int == 1:  # 强制多头
@@ -73,20 +74,17 @@ def psar_init(high, low, close, af0, force_direction_int):
     elif force_direction_int == -1:  # 强制空头
         is_long = False
     else:  # 自动判断方向 (force_direction_int == 0)
-        # 确定初始趋势，与 pandas_ta 的 _falling 函数一致
-        # 使用传入数据的前两根K线来判断初始方向 (索引 0 和 1)
-        up_dm = high[1] - high[0]
-        dn_dm = low[0] - low[1]
+        # 使用传入的标量数据进行判断
+        up_dm = high_curr - high_prev
+        dn_dm = low_prev - low_curr
         is_falling_initial = dn_dm > up_dm and dn_dm > 0
         is_long = not is_falling_initial
 
-    # 初始化 PSAR 值，直接使用 close[0]，与 pandas_ta 的 sar[0] = close[0] 一致
-    # 即使是强制方向，初始PSAR点也通常从第一根K线的收盘价或特定位置开始
-    current_psar = close[0]
+    # 初始化 PSAR 值，直接使用 close_prev
+    current_psar = close_prev
 
     # 初始化极端点 (EP)
-    # 遵循 pandas_ta 的逻辑：如果是多头趋势，EP 是初始K线的最高点；如果是空头趋势，EP 是初始K线的最低点
-    current_ep = high[0] if is_long else low[0]
+    current_ep = high_prev if is_long else low_prev
 
     # 初始化加速因子 (AF)
     current_af = af0
@@ -250,7 +248,15 @@ def calculate_psar_all(
     psar_reversal_result[0] = 0.0
 
     # 使用 psar_init 获取初始状态
-    initial_state = psar_init(high[:2], low[:2], close[:2], af0, 0)
+    initial_state = psar_init(
+        high[0],  # high_prev
+        high[1],  # high_curr
+        low[0],  # low_prev
+        low[1],  # low_curr
+        close[0],  # close_prev
+        af0,
+        0,  # 传入 0 表示自动判断方向
+    )
     is_long, current_psar, current_ep, current_af = initial_state
 
     if math.isnan(current_psar):
