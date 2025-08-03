@@ -96,7 +96,7 @@ def main(
                 sma2_id: True,
                 # bbands_id: True,
                 # atr_id: True,
-                # psar_id: True,
+                psar_id: True,
             },
             signal_params=[0, 0],
             indicator_update2={
@@ -107,7 +107,7 @@ def main(
                 sma2_id: True,
                 # bbands_id: True,
                 # atr_id: True,
-                # psar_id: True,
+                psar_id: True,
             },
             dtype_dict=dtype_dict,
         )

@@ -49,7 +49,7 @@ def get_leading_nan_counts_for_two_arrays(
 
 def assert_indicator_same(array1, array2, indicator_name, params_str):
     """
-    通用函数，用于比较 Pandas TA 和 NumPy 实现的指标结果。
+    通用函数，用于比较 array1 和 array2 实现的指标结果。
     """
     print("\n")
     # 如果是布尔数组，直接使用 assert_array_equal，并跳过 NaN 检查和 max_diff 计算

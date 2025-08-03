@@ -3,7 +3,7 @@ import pandas as pd
 import pandas_ta as ta
 import pytest
 from Test.conftest import df_data, np_data, dtype_dict
-from Test.test_utils import assert_indicator_same
+from Test.test_utils import assert_indicator_same, assert_indicator_different
 from utils.config_utils import get_params
 from src.interface import entry_func
 from src.indicators.psar import psar_id, psar_name, psar_spec
@@ -116,7 +116,9 @@ def test_accuracy_talib(
     test_accuracy(df_data, np_data, dtype_dict, talib, assert_func)
 
 
-def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
+def test_pandas_ta_and_talib_sma_same(
+    df_data, dtype_dict, assert_func=assert_indicator_same
+):
     """
     比较 pandas-ta 和 talib 计算的 SMA 结果是否相同。
     预期结果是相同，所以使用 assert_indicator_same。
@@ -165,28 +167,28 @@ def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
         pandas_psar_af_talib = pandas_psar_talib[f"PSARaf_{af0}_{max_af}"].values
         pandas_psar_reversal_talib = pandas_psar_talib[f"PSARr_{af0}_{max_af}"].values
 
-        assert_indicator_same(
+        assert_func(
             pandas_psar_long,
             pandas_psar_long_talib,
             psar_spec["ori_name"],
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
-        assert_indicator_same(
+        assert_func(
             pandas_psar_short,
             pandas_psar_short_talib,
             psar_spec["ori_name"],
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
-        assert_indicator_same(
+        assert_func(
             pandas_psar_af,
             pandas_psar_af_talib,
             psar_spec["ori_name"],
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
-        assert_indicator_same(
+        assert_func(
             pandas_psar_reversal,
             pandas_psar_reversal_talib,
             psar_spec["ori_name"],

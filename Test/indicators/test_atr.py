@@ -83,10 +83,11 @@ def test_accuracy_talib(
     test_accuracy(df_data, np_data, dtype_dict, talib, assert_func)
 
 
-def test_pandas_ta_and_talib_atr_same(df_data, dtype_dict):
+def test_pandas_ta_and_talib_atr_different(
+    df_data, dtype_dict, assert_func=assert_indicator_different
+):
     """
     比较 pandas-ta 和 talib 计算的 SMA 结果是否相同。
-    预期结果是相同，所以使用 assert_indicator_same。
     """
     time_series = df_data["time"]
     open_series = df_data["open"]
@@ -109,7 +110,4 @@ def test_pandas_ta_and_talib_atr_same(df_data, dtype_dict):
             high_series, low_series, close_series, length=int(atr_period), talib=True
         )
 
-        # 使用 assert_indicator_different 验证两者是否不同
-        assert_indicator_different(
-            pandas_sma, talib_sma, atr_spec["ori_name"], f"period {atr_period}"
-        )
+        assert_func(pandas_sma, talib_sma, atr_spec["ori_name"], f"period {atr_period}")

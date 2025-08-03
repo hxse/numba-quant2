@@ -104,7 +104,9 @@ def test_accuracy_talib(
     test_accuracy(df_data, np_data, dtype_dict, talib, assert_func)
 
 
-def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
+def test_pandas_ta_and_talib_sma_same(
+    df_data, dtype_dict, assert_func=assert_indicator_same
+):
     """
     比较 pandas-ta 和 talib 计算的 SMA 结果是否相同。
     预期结果是相同，所以使用 assert_indicator_same。
@@ -144,21 +146,21 @@ def test_pandas_ta_and_talib_sma_same(df_data, dtype_dict):
             f"BBL_{bbands_period}_{bbands_std_mult}"
         ].values
 
-        assert_indicator_same(
+        assert_func(
             pandas_middle_talib,
             pandas_middle,
             bbands_spec["ori_name"],
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
-        assert_indicator_same(
+        assert_func(
             pandas_upper_talib,
             pandas_upper,
             bbands_spec["ori_name"],
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
-        assert_indicator_same(
+        assert_func(
             pandas_lower_talib,
             pandas_lower,
             bbands_spec["ori_name"],
