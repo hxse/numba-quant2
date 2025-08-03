@@ -93,7 +93,7 @@ def main(
             },
             indicator_enabled={
                 sma_id: True,
-                sma2_id: True,
+                # sma2_id: True,
                 # bbands_id: True,
                 # atr_id: True,
                 psar_id: True,
@@ -101,10 +101,14 @@ def main(
             signal_params=[0, 0],
             indicator_update2={
                 sma_name: [[14] for i in range(num)],
+                sma2_name: [[50] for i in range(num)],
+                bbands_name: [[20, 2.0] for i in range(num)],
+                atr_name: [[14] for i in range(num)],
+                psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
             },
             indicator_enabled2={
                 sma_id: True,
-                sma2_id: True,
+                # sma2_id: True,
                 # bbands_id: True,
                 # atr_id: True,
                 psar_id: True,

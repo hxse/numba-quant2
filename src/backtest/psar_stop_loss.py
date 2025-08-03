@@ -37,9 +37,6 @@ signature = nb.types.Tuple(
     nb_float_type,  # af_step
     nb_float_type,  # max_af
     nb_int_type,  # init_idx_offset (用于 psar_init 的索引偏移量，因为传入的 high/low 可能是切片)
-    # nb.types.Array(nb_float_type, 1, "C"),  # high_arr (full array)
-    # nb.types.Array(nb_float_type, 1, "C"),  # low_arr (full array)
-    # nb.types.Array(nb_float_type, 1, "C"),  # close_arr (full array)
 )
 
 
@@ -59,9 +56,6 @@ def apply_psar_stop_loss(
     af_step,
     max_af,
     init_idx_offset,  # 用于 psar_init 的索引偏移量，代表 K 线的绝对索引
-    # full_high_arr,
-    # full_low_arr,
-    # full_close_arr,
 ):
     """
     独立封装 PSAR 跟踪止损逻辑。

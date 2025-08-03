@@ -358,14 +358,16 @@ def calculate_psar_wrapper(
     psar_indicator_params_child = indicator_params_child[_id]
     psar_indicator_result_child = indicator_result_child[_id]
 
-    af0 = psar_indicator_params_child[0]
-    af_step = psar_indicator_params_child[1]
-    max_af = psar_indicator_params_child[2]
+    if psar_indicator_params_child.shape[0] >= 3:
+        af0 = psar_indicator_params_child[0]
+        af_step = psar_indicator_params_child[1]
+        max_af = psar_indicator_params_child[2]
 
-    psar_long_result = psar_indicator_result_child[:, 0]
-    psar_short_result = psar_indicator_result_child[:, 1]
-    psar_af_result = psar_indicator_result_child[:, 2]
-    psar_reversal_result = psar_indicator_result_child[:, 3]
+    if psar_indicator_result_child.shape[1] >= 4:
+        psar_long_result = psar_indicator_result_child[:, 0]
+        psar_short_result = psar_indicator_result_child[:, 1]
+        psar_af_result = psar_indicator_result_child[:, 2]
+        psar_reversal_result = psar_indicator_result_child[:, 3]
 
     calculate_psar_all(
         high,

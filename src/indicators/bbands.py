@@ -102,12 +102,14 @@ def calculate_bbands_wrapper(
     bbands_indicator_params_child = indicator_params_child[_id]
     bbands_indicator_result_child = indicator_result_child[_id]
 
-    bbands_period = bbands_indicator_params_child[0]
-    bbands_std_mult = bbands_indicator_params_child[1]
+    if bbands_indicator_params_child.shape[0] >= 2:
+        bbands_period = bbands_indicator_params_child[0]
+        bbands_std_mult = bbands_indicator_params_child[1]
 
-    middle_result = bbands_indicator_result_child[:, 0]
-    upper_result = bbands_indicator_result_child[:, 1]
-    lower_result = bbands_indicator_result_child[:, 2]
+    if bbands_indicator_result_child.shape[1] >= 3:
+        middle_result = bbands_indicator_result_child[:, 0]
+        upper_result = bbands_indicator_result_child[:, 1]
+        lower_result = bbands_indicator_result_child[:, 2]
 
     # bbands_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
     calculate_bbands(

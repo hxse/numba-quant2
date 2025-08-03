@@ -82,19 +82,10 @@ def handle_entry_exit_signals(  # 函数名略微调整
     new_psar_state = (False, np.nan, np.nan, np.nan)
     new_current_atr_tsl_price = np.nan
 
-    # Convert tuples to Numba set for efficient `in` checks
-    # Numba sets are usually better for `in` checks than iterating through tuples
-    nb_is_long_set = set(IS_LONG_POSITION)
-    nb_is_short_set = set(IS_SHORT_POSITION)
-    nb_is_no_position_set = set(IS_NO_POSITION)
-
     # 优先处理开平仓反转 (平多开空或平空开多)
     # 平多进空 (-4)
     if (
-        (
-            trade_status_prev in nb_is_long_set
-            or trade_status_prev in nb_is_no_position_set
-        )
+        (trade_status_prev in IS_LONG_POSITION or trade_status_prev in IS_NO_POSITION)
         and exit_long_prev
         and enter_short_prev
         and not enter_long_prev
@@ -118,10 +109,7 @@ def handle_entry_exit_signals(  # 函数名略微调整
 
     # 平空进多 (4)
     elif (
-        (
-            trade_status_prev in nb_is_short_set
-            or trade_status_prev in nb_is_no_position_set
-        )
+        (trade_status_prev in IS_SHORT_POSITION or trade_status_prev in IS_NO_POSITION)
         and exit_short_prev
         and enter_long_prev
         and not enter_short_prev
@@ -144,7 +132,7 @@ def handle_entry_exit_signals(  # 函数名略微调整
         )
 
     # 平多离场 (3)
-    elif trade_status_prev in nb_is_long_set and exit_long_prev:
+    elif trade_status_prev in IS_LONG_POSITION and exit_long_prev:
         new_trade_status = 3
         new_trigger_price = open_arr[current_k_idx]
         new_current_direction = 0
@@ -152,7 +140,7 @@ def handle_entry_exit_signals(  # 函数名略微调整
         new_current_atr_tsl_price = np.nan
 
     # 平空离场 (-3)
-    elif trade_status_prev in nb_is_short_set and exit_short_prev:
+    elif trade_status_prev in IS_SHORT_POSITION and exit_short_prev:
         new_trade_status = -3
         new_trigger_price = open_arr[current_k_idx]
         new_current_direction = 0
@@ -161,7 +149,7 @@ def handle_entry_exit_signals(  # 函数名略微调整
 
     # 多头进场 (1)
     elif (
-        trade_status_prev in nb_is_no_position_set
+        trade_status_prev in IS_NO_POSITION
         and enter_long_prev
         and not exit_long_prev
         and not enter_short_prev
@@ -184,7 +172,7 @@ def handle_entry_exit_signals(  # 函数名略微调整
 
     # 空头进场 (-1)
     elif (
-        trade_status_prev in nb_is_no_position_set
+        trade_status_prev in IS_NO_POSITION
         and enter_short_prev
         and not exit_short_prev
         and not enter_long_prev

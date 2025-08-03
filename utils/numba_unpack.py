@@ -122,7 +122,7 @@ def initialize_outputs(
 
     psar_rows2 = tohlcv2_rows if indicator_enabled2[psar_spec["id"]] else min_rows
     psar_result2 = np.full(
-        (conf_count, psar_rows2, atr_output_dim), np.nan, dtype=np_float_type
+        (conf_count, psar_rows2, psar_output_dim), np.nan, dtype=np_float_type
     )
 
     indicator_result2 = (

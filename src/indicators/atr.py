@@ -96,8 +96,11 @@ def calculate_atr_wrapper(
     atr_indicator_params_child = indicator_params_child[_id]
     atr_indicator_result_child = indicator_result_child[_id]
 
-    atr_period = atr_indicator_params_child[0]
-    atr_result = atr_indicator_result_child[:, 0]
+    if atr_indicator_params_child.shape[0] >= 1:
+        atr_period = atr_indicator_params_child[0]
+
+    if atr_indicator_result_child.shape[1] >= 1:
+        atr_result = atr_indicator_result_child[:, 0]
 
     temp_arr_0 = float_temp_array_child[:, 0]
     temp_arr_0[:] = np.nan

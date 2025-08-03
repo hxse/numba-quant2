@@ -82,8 +82,11 @@ def calculate_sma_wrapper(
     sma_indicator_params_child = indicator_params_child[_id]
     sma_indicator_result_child = indicator_result_child[_id]
 
-    sma_period = sma_indicator_params_child[0]
-    sma_result = sma_indicator_result_child[:, 0]
+    if sma_indicator_params_child.shape[0] >= 1:
+        sma_period = sma_indicator_params_child[0]
+
+    if sma_indicator_result_child.shape[0] >= 1:
+        sma_result = sma_indicator_result_child[:, 0]
 
     # sma_period 不用显示转换类型, numba会隐式把小数截断成整数(小数部分丢弃)
     calculate_sma(close, sma_period, sma_result)

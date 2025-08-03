@@ -107,10 +107,9 @@ def calc_backtest(params_child):
 
     # PSAR 参数（假设从 indicator_params_child 获取）
     # 实际项目中，这些参数应该从 indicator_params_child 获取
-    psar_params = indicator_params_child[4]  # 假设 psar_id = 4
-    af0 = psar_params[0]  # 初始加速因子
-    af_step = psar_params[1]  # 加速因子步长
-    max_af = psar_params[2]  # 最大加速因子
+    af0 = 0.02  # 初始加速因子
+    af_step = 0.02  # 加速因子步长
+    max_af = 0.2  # 最大加速因子
 
     # ATR 参数（硬编码，以后可从 indicator_params_child 获取）
     ATR_PERIOD = 14
