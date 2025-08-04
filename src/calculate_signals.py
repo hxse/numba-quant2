@@ -2,6 +2,7 @@ import numba as nb
 import numpy as np
 from utils.data_types import get_params_child_signature
 
+from src.backtest.clean_signal import clean_signal
 from src.signal.simple_template import simple_signal
 
 
@@ -52,3 +53,5 @@ def calc_signal(params_child):
                 signal_result_child,
                 temp_args,
             )
+
+    clean_signal(signal_result_child)

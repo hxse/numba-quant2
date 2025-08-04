@@ -2,8 +2,7 @@ import numba as nb
 from utils.data_types import get_params_child_signature
 from .calculate_indicators import calc_indicators
 from .calculate_signals import calc_signal
-from .calculate_backtest import calc_backtest
-
+from .backtest.calculate_backtest import calc_backtest
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types

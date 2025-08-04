@@ -63,7 +63,7 @@ def initialize_outputs(
 
     # --- Indicator Result Arrays ---
     signal_output_dim = 4
-    backtest_output_dim = 10
+    backtest_output_dim = 15
     temp_float_num = max(
         temp_float_num,
         sma_spec["temp_count"] + sma2_spec["temp_count"] + bbands_spec["temp_count"],

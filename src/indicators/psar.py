@@ -95,10 +95,11 @@ def psar_init(
 # --- PSAR 实时更新函数 ---
 signature_update = nb.types.Tuple(
     (
-        nb_bool_type,
-        nb_float_type,
-        nb_float_type,
-        nb_float_type,
+        # nb_bool_type,
+        # nb_float_type,
+        # nb_float_type,
+        # nb_float_type,
+        PsarState,
         nb_float_type,
         nb_float_type,
         nb_float_type,
@@ -135,13 +136,13 @@ def psar_update(
         next_psar_raw_candidate = prev_psar - prev_af * (prev_psar - prev_ep)
 
     # 2. 判断是否发生反转
-    reversal = False
+    reversal = 0.0
     if prev_is_long:
         if current_low < next_psar_raw_candidate:
-            reversal = True
+            reversal = 1.0
     else:
         if current_high > next_psar_raw_candidate:
-            reversal = True
+            reversal = 1.0
 
     # 3. 对 PSAR 进行穿透检查
     current_psar = 0.0
@@ -164,7 +165,7 @@ def psar_update(
 
     # 5. 处理反转（如果发生）
     new_is_long = prev_is_long
-    if reversal:
+    if reversal == 1.0:
         new_is_long = not prev_is_long
         new_af = af_step
         current_psar = prev_ep
@@ -186,13 +187,10 @@ def psar_update(
         psar_short_val = current_psar
 
     return (
-        new_is_long,
-        current_psar,
-        new_ep,
-        new_af,
+        (new_is_long, current_psar, new_ep, new_af),
         psar_long_val,
         psar_short_val,
-        float(int(reversal)),
+        reversal,
     )
 
 
@@ -216,7 +214,7 @@ signature_all = nb.void(
     signature=signature_all,
     cache_enabled=nb_params.get("cache", True),
 )
-def calculate_psar_all(
+def calculate_psar(
     high,
     low,
     close,
@@ -315,21 +313,14 @@ def calculate_psar_all(
     for i in range(2, n):
         prev_state_tuple = (is_long, current_psar, current_ep, current_af)
         (
-            new_is_long,
-            new_psar,
-            new_ep,
-            new_af,
+            new_state_tuple,
             psar_long_val,
             psar_short_val,
             reversal_val,
         ) = psar_update(
             prev_state_tuple, high[i], low[i], high[i - 1], low[i - 1], af_step, max_af
         )
-
-        is_long = new_is_long
-        current_psar = new_psar
-        current_ep = new_ep
-        current_af = new_af
+        is_long, current_psar, current_ep, current_af = new_state_tuple
 
         psar_long_result[i] = psar_long_val
         psar_short_result[i] = psar_short_val
@@ -369,7 +360,7 @@ def calculate_psar_wrapper(
         psar_af_result = psar_indicator_result_child[:, 2]
         psar_reversal_result = psar_indicator_result_child[:, 3]
 
-    calculate_psar_all(
+    calculate_psar(
         high,
         low,
         close,
