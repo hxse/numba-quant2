@@ -92,27 +92,6 @@ def psar_init(
     return (is_long, current_psar, current_ep, current_af)
 
 
-# --- PSAR 实时更新函数 ---
-signature_update = nb.types.Tuple(
-    (
-        # nb_bool_type,
-        # nb_float_type,
-        # nb_float_type,
-        # nb_float_type,
-        PsarState,
-        nb_float_type,
-        nb_float_type,
-        nb_float_type,
-    )
-)(
-    PsarState,  # prev_state
-    nb_float_type,  # current_high
-    nb_float_type,  # current_low
-    nb_float_type,  # prev_high
-    nb_float_type,  # prev_low
-    nb_float_type,  # af_step
-    nb_float_type,  # max_af
-)
 signature_first_iteration = nb.types.Tuple(
     (
         PsarState,
@@ -212,13 +191,42 @@ def psar_first_iteration(high, low, close, af0, af_step, max_af):
     )
 
 
+# --- PSAR 实时更新函数 ---
+signature_update = nb.types.Tuple(
+    (
+        PsarState,
+        nb_float_type,
+        nb_float_type,
+        nb_float_type,
+    )
+)(
+    PsarState,  # prev_state
+    nb_float_type,  # current_high
+    nb_float_type,  # current_low
+    nb_float_type,  # prev_high
+    nb_float_type,  # prev_low
+    nb_float_type,  # af_step
+    nb_float_type,  # max_af
+    nb_float_type,  # current_close
+    nb_bool_type,  # current_close
+)
+
+
 @nb_wrapper(
     mode=nb_params["mode"],
     signature=signature_update,
     cache_enabled=nb_params.get("cache", True),
 )
 def psar_update(
-    prev_state, current_high, current_low, prev_high, prev_low, af_step, max_af
+    prev_state,
+    current_high,
+    current_low,
+    prev_high,
+    prev_low,
+    af_step,
+    max_af,
+    current_close,
+    close_for_reversal,
 ):
     """
     根据前一根 K 线后的 PSAR 状态和当前 K 线的数据，计算新的 PSAR 值并更新状态。
@@ -232,13 +240,21 @@ def psar_update(
     else:
         next_psar_raw_candidate = prev_psar - prev_af * (prev_psar - prev_ep)
 
+    # 2. 是否使用close判断翻转
+    if close_for_reversal:
+        reversal_price = current_close
+    elif prev_is_long:
+        reversal_price = current_low
+    else:
+        reversal_price = current_high
+
     # 2. 判断是否发生反转
     reversal = 0.0
     if prev_is_long:
-        if current_low < next_psar_raw_candidate:
+        if reversal_price < next_psar_raw_candidate:
             reversal = 1.0
     else:
-        if current_high > next_psar_raw_candidate:
+        if reversal_price > next_psar_raw_candidate:
             reversal = 1.0
 
     # 3. 对 PSAR 进行穿透检查
@@ -366,7 +382,15 @@ def calculate_psar(
             psar_short_val,
             reversal_val,
         ) = psar_update(
-            prev_state_tuple, high[i], low[i], high[i - 1], low[i - 1], af_step, max_af
+            prev_state_tuple,
+            high[i],
+            low[i],
+            high[i - 1],
+            low[i - 1],
+            af_step,
+            max_af,
+            close[i],
+            False,
         )
         is_long, current_psar, current_ep, current_af = new_state_tuple
 

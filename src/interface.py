@@ -35,7 +35,7 @@ def entry_func(
     dtype_dict=default_dtype_dict,
     min_rows=0,  # 最小填充数组行数
     temp_int_num=1,
-    temp_float_num=1,
+    temp_float_num=4,
     temp_bool_num=4,
     core_time=False,
     auto_tune_cuda_config=True,
