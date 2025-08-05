@@ -144,7 +144,7 @@ def calculate_exit_triggers(
             psar_af_step,
             psar_max_af,
             close_arr[i],
-            False,
+            close_for_reversal,
         )
 
     elif position_status_result[i] in (-1, -4):  # 空头开仓或反手
@@ -190,7 +190,7 @@ def calculate_exit_triggers(
             psar_af_step,
             psar_max_af,
             close_arr[i],
-            False,
+            close_for_reversal,
         )
 
     elif position_status_result[i] == 2:  # 多头持仓
@@ -225,7 +225,7 @@ def calculate_exit_triggers(
             psar_af_step,
             psar_max_af,
             close_arr[i],
-            False,
+            close_for_reversal,
         )
 
     elif position_status_result[i] == -2:  # 空头持仓
@@ -260,7 +260,7 @@ def calculate_exit_triggers(
             psar_af_step,
             psar_max_af,
             close_arr[i],
-            False,
+            close_for_reversal,
         )
 
     # 生成离场触发信号
