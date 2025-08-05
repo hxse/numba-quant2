@@ -113,6 +113,103 @@ signature_update = nb.types.Tuple(
     nb_float_type,  # af_step
     nb_float_type,  # max_af
 )
+signature_first_iteration = nb.types.Tuple(
+    (
+        PsarState,
+        nb_float_type,
+        nb_float_type,
+        nb_float_type,
+    )
+)(
+    nb_float_type[:],
+    nb_float_type[:],
+    nb_float_type[:],
+    nb_float_type,
+    nb_float_type,
+    nb_float_type,
+)
+
+
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature_first_iteration,
+    cache_enabled=nb_params.get("cache", True),
+)
+def psar_first_iteration(high, low, close, af0, af_step, max_af):
+    """
+    处理 PSAR 算法的第一次迭代（计算索引1的结果）。
+    返回一个元组：(new_state_tuple, psar_long_val, psar_short_val, reversal_val)
+    """
+    # 使用 psar_init 获取初始状态
+    initial_state = psar_init(
+        high[0],  # high_prev
+        high[1],  # high_curr
+        low[0],  # low_prev
+        low[1],  # low_curr
+        close[0],  # close_prev
+        af0,
+        0,  # 传入 0 表示自动判断方向
+    )
+    is_long, current_psar, current_ep, current_af = initial_state
+
+    if math.isnan(current_psar):
+        return (is_long, current_psar, current_ep, current_af), np.nan, np.nan, 0.0
+
+    # 计算索引 1 的 PSAR
+    next_psar_raw_candidate = (
+        current_psar + current_af * (current_ep - current_psar)
+        if is_long
+        else current_psar - current_af * (current_psar - current_ep)
+    )
+    current_psar = (
+        min(next_psar_raw_candidate, low[0])
+        if is_long
+        else max(next_psar_raw_candidate, high[0])
+    )
+
+    # 检查反转
+    reversal = (
+        low[1] < next_psar_raw_candidate
+        if is_long
+        else high[1] > next_psar_raw_candidate
+    )
+
+    # 更新 EP 和 AF
+    if is_long:
+        if high[1] > current_ep:
+            current_ep = high[1]
+            current_af = min(max_af, current_af + af_step)
+    else:
+        if low[1] < current_ep:
+            current_ep = low[1]
+            current_af = min(max_af, current_af + af_step)
+
+    # 处理反转
+    if reversal:
+        is_long = not is_long
+        current_af = af0
+        current_psar = current_ep
+        if is_long:
+            if current_psar > low[1]:
+                current_psar = low[1]
+            current_ep = high[1]
+        else:
+            if current_psar < high[1]:
+                current_psar = high[1]
+            current_ep = low[1]
+
+    # 确定返回的 PSAR 值
+    psar_long_val = current_psar if is_long else np.nan
+    psar_short_val = current_psar if not is_long else np.nan
+    reversal_val = float(int(reversal))
+
+    # 返回更新后的状态和结果
+    return (
+        (is_long, current_psar, current_ep, current_af),
+        psar_long_val,
+        psar_short_val,
+        reversal_val,
+    )
 
 
 @nb_wrapper(
@@ -245,69 +342,20 @@ def calculate_psar(
     psar_af_result[0] = af0
     psar_reversal_result[0] = 0.0
 
-    # 使用 psar_init 获取初始状态
-    initial_state = psar_init(
-        high[0],  # high_prev
-        high[1],  # high_curr
-        low[0],  # low_prev
-        low[1],  # low_curr
-        close[0],  # close_prev
-        af0,
-        0,  # 传入 0 表示自动判断方向
-    )
-    is_long, current_psar, current_ep, current_af = initial_state
+    # 调用新封装的函数处理索引 1
+    (
+        initial_state_for_loop,
+        psar_long_result[1],
+        psar_short_result[1],
+        psar_reversal_result[1],
+    ) = psar_first_iteration(high, low, close, af0, af_step, max_af)
+
+    # 获取为核心循环准备好的状态
+    is_long, current_psar, current_ep, current_af = initial_state_for_loop
+    psar_af_result[1] = current_af
 
     if math.isnan(current_psar):
         return
-
-    # 计算索引 1 的 PSAR，模仿 pandas_ta 的第一次迭代
-    next_psar_raw_candidate = (
-        current_psar + current_af * (current_ep - current_psar)
-        if is_long
-        else current_psar - current_af * (current_psar - current_ep)
-    )
-    current_psar = (
-        min(next_psar_raw_candidate, low[0])
-        if is_long
-        else max(next_psar_raw_candidate, high[0])
-    )
-
-    # 检查反转
-    reversal = (
-        low[1] < next_psar_raw_candidate
-        if is_long
-        else high[1] > next_psar_raw_candidate
-    )
-
-    # 更新 EP 和 AF
-    if is_long:
-        if high[1] > current_ep:
-            current_ep = high[1]
-            current_af = min(max_af, current_af + af_step)
-    else:
-        if low[1] < current_ep:
-            current_ep = low[1]
-            current_af = min(max_af, current_af + af_step)
-
-    # 处理反转
-    if reversal:
-        is_long = not is_long
-        current_af = af0
-        current_psar = current_ep
-        if is_long:
-            if current_psar > low[1]:
-                current_psar = low[1]
-            current_ep = high[1]
-        else:
-            if current_psar < high[1]:
-                current_psar = high[1]
-            current_ep = low[1]
-
-    # 填充索引 1 的结果
-    psar_long_result[1] = current_psar if is_long else np.nan
-    psar_short_result[1] = current_psar if not is_long else np.nan
-    psar_af_result[1] = current_af
-    psar_reversal_result[1] = float(int(reversal))
 
     # 核心循环：从索引 2 开始
     for i in range(2, n):
