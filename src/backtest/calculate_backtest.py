@@ -66,22 +66,27 @@ def calc_backtest(params_child):
     # 从 backtest_result_child 中提取回测结果数组
     position_status_result = backtest_result_child[:, 0]
     trigger_price_result = backtest_result_child[:, 1]
-    # exit_long_trigger_result = backtest_result_child[:, 2]
-    # exit_short_trigger_result = backtest_result_child[:, 3]
+    # percentage 相关
+    pct_sl_result = backtest_result_child[:, 2]
+    pct_tp_result = backtest_result_child[:, 3]
+    pct_tsl_result = backtest_result_child[:, 4]
     # atr 相关
-    atr_price_result = backtest_result_child[:, 2]
-    atr_sl_price_result = backtest_result_child[:, 3]
-    atr_tp_price_result = backtest_result_child[:, 4]
-    atr_tsl_price_result = backtest_result_child[:, 5]
+    atr_price_result = backtest_result_child[:, 5]
+    atr_sl_price_result = backtest_result_child[:, 6]
+    atr_tp_price_result = backtest_result_child[:, 7]
+    atr_tsl_price_result = backtest_result_child[:, 8]
     # psar 相关
-    psar_long_result = backtest_result_child[:, 6]
-    psar_short_result = backtest_result_child[:, 7]
-    psar_af_result = backtest_result_child[:, 8]
-    psar_reversal_result = backtest_result_child[:, 9]
+    psar_long_result = backtest_result_child[:, 9]
+    psar_short_result = backtest_result_child[:, 10]
+    psar_af_result = backtest_result_child[:, 11]
+    psar_reversal_result = backtest_result_child[:, 12]
 
     # 0无仓位,1开多,2持多,3平多,4平空开多,-1开空,-2持空,-3平空,-4平多开空
     position_status_result[:] = 0
     trigger_price_result[:] = np.nan
+    pct_sl_result[:] = np.nan
+    pct_tp_result[:] = np.nan
+    pct_tsl_result[:] = np.nan
     atr_price_result[:] = np.nan
     atr_sl_price_result[:] = np.nan
     atr_tp_price_result[:] = np.nan
@@ -105,6 +110,11 @@ def calc_backtest(params_child):
     IS_LONG_POSITION = (1, 2, 4)
     IS_SHORT_POSITION = (-1, -2, -4)
     IS_NO_POSITION = (0, 3, -3)
+
+    # percentage参数, 目前先硬编码
+    pct_sl = 0.02
+    pct_tp = 0.02
+    pct_tsl = 0.02
 
     # ATR参数, 目前先硬编码
     atr_preiod = 14
@@ -155,6 +165,9 @@ def calc_backtest(params_child):
             IS_LONG_POSITION,
             IS_SHORT_POSITION,
             IS_NO_POSITION,
+            pct_sl,
+            pct_tp,
+            pct_tsl,
             atr_sl_multiplier,
             atr_tp_multiplier,
             atr_tsl_multiplier,

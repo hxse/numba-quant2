@@ -19,7 +19,7 @@ nb_float_type = dtype_dict["nb"]["float"]
 nb_bool_type = dtype_dict["nb"]["bool"]
 
 # 定义 Numba 签名
-exit_signals_signature = nb.void(
+signature = nb.void(
     nb_int_type,  # i
     nb_int_type,  # last_i
     nb_float_type[:, :],  # tohlcv
@@ -32,6 +32,9 @@ exit_signals_signature = nb.void(
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_LONG_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_SHORT_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_NO_POSITION
+    nb_float_type,  # percentage_sl,
+    nb_float_type,  # percentage_tp,
+    nb_float_type,  # percentage_tsl,
     nb_float_type,  # atr_sl_multiplier
     nb_float_type,  # atr_tp_multiplier
     nb_float_type,  # atr_tsl_multiplier
@@ -42,7 +45,11 @@ exit_signals_signature = nb.void(
 )
 
 
-@nb.jit(exit_signals_signature, nopython=True, cache=True)
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature,
+    cache_enabled=nb_params.get("cache", True),
+)
 def calculate_exit_triggers(
     i,
     last_i,
@@ -56,6 +63,9 @@ def calculate_exit_triggers(
     IS_LONG_POSITION,
     IS_SHORT_POSITION,
     IS_NO_POSITION,
+    pct_sl,
+    pct_tp,
+    pct_tsl,
     atr_sl_multiplier,
     atr_tp_multiplier,
     atr_tsl_multiplier,
@@ -85,14 +95,17 @@ def calculate_exit_triggers(
     # 提取回测结果数组
     position_status_result = backtest_result_child[:, 0]
     trigger_price_result = backtest_result_child[:, 1]
-    atr_price_result = backtest_result_child[:, 2]
-    atr_sl_price_result = backtest_result_child[:, 3]
-    atr_tp_price_result = backtest_result_child[:, 4]
-    atr_tsl_price_result = backtest_result_child[:, 5]
-    psar_long_result = backtest_result_child[:, 6]
-    psar_short_result = backtest_result_child[:, 7]
-    psar_af_result = backtest_result_child[:, 8]
-    psar_reversal_result = backtest_result_child[:, 9]
+    pct_sl_result = backtest_result_child[:, 2]
+    pct_tp_result = backtest_result_child[:, 3]
+    pct_tsl_result = backtest_result_child[:, 4]
+    atr_price_result = backtest_result_child[:, 5]
+    atr_sl_price_result = backtest_result_child[:, 6]
+    atr_tp_price_result = backtest_result_child[:, 7]
+    atr_tsl_price_result = backtest_result_child[:, 8]
+    psar_long_result = backtest_result_child[:, 9]
+    psar_short_result = backtest_result_child[:, 10]
+    psar_af_result = backtest_result_child[:, 11]
+    psar_reversal_result = backtest_result_child[:, 12]
 
     atr = atr_price_result[i]
     atr_sl = atr * atr_sl_multiplier
@@ -102,6 +115,10 @@ def calculate_exit_triggers(
     # 用i在当下仓位及时计算离场信号exit_long_trigger_result, 离场信号会在下一个循环触发交易
     # psar tsl和atr tsl行为类似,每次开仓都初始化,从而跟踪仓位状态
     if position_status_result[i] in (1, 4):  # 多头开仓或反手
+        pct_sl_result[i] = pct_sl_result[i] * (1 - pct_sl)
+        pct_tp_result[i] = pct_tp_result[i] * (1 + pct_tp)
+        pct_tsl_result[i] = pct_tsl_result[i] * (1 - pct_tsl)
+
         atr_sl_price_result[i] = trigger_price_result[i] - atr_sl
         atr_tp_price_result[i] = trigger_price_result[i] + atr_tp
         atr_tsl_price_result[i] = target_price - atr_tsl
@@ -148,6 +165,10 @@ def calculate_exit_triggers(
         )
 
     elif position_status_result[i] in (-1, -4):  # 空头开仓或反手
+        pct_sl_result[i] = pct_sl_result[i] * (1 + pct_sl)
+        pct_tp_result[i] = pct_tp_result[i] * (1 - pct_tp)
+        pct_tsl_result[i] = pct_tsl_result[i] * (1 + pct_tsl)
+
         atr_sl_price_result[i] = trigger_price_result[i] + atr_sl
         atr_tp_price_result[i] = trigger_price_result[i] - atr_tp
         atr_tsl_price_result[i] = target_price + atr_tsl
@@ -194,9 +215,14 @@ def calculate_exit_triggers(
         )
 
     elif position_status_result[i] == 2:  # 多头持仓
+        exit_price = close_arr[i] if close_for_reversal else high_arr[i]
+
+        pct_sl_result[i] = pct_sl_result[last_i]
+        pct_tp_result[i] = pct_tp_result[last_i]
+        pct_tsl_result[i] = max(pct_tsl_result[i], exit_price * (1 - pct_tsl))
+
         atr_sl_price_result[i] = atr_sl_price_result[last_i]
         atr_tp_price_result[i] = atr_tp_price_result[last_i]
-        exit_price = close_arr[i] if close_for_reversal else high_arr[i]
         atr_tsl_price_result[i] = max(
             atr_tsl_price_result[last_i], exit_price - atr_tsl
         )
@@ -229,9 +255,14 @@ def calculate_exit_triggers(
         )
 
     elif position_status_result[i] == -2:  # 空头持仓
+        exit_price = close_arr[i] if close_for_reversal else low_arr[i]
+
+        pct_sl_result[i] = pct_sl_result[last_i]
+        pct_tp_result[i] = pct_tp_result[last_i]
+        pct_tsl_result[i] = min(pct_tsl_result[i], exit_price * (1 + pct_tsl))
+
         atr_sl_price_result[i] = atr_sl_price_result[last_i]
         atr_tp_price_result[i] = atr_tp_price_result[last_i]
-        exit_price = close_arr[i] if close_for_reversal else low_arr[i]
         atr_tsl_price_result[i] = min(
             atr_tsl_price_result[last_i], exit_price + atr_tsl
         )
@@ -266,29 +297,32 @@ def calculate_exit_triggers(
     # 生成离场触发信号
     if position_status_result[i] in IS_LONG_POSITION:
         exit_price = close_arr[i] if close_for_reversal else low_arr[i]
+
         if (
-            exit_price < atr_sl_price_result[i]
+            exit_price < pct_sl_result[i]
+            or exit_price > pct_tp_result[i]
+            or exit_price < pct_tsl_result[i]
+            or exit_price < atr_sl_price_result[i]
             or exit_price > atr_tp_price_result[i]
             or exit_price < atr_tsl_price_result[i]
+            or psar_reversal_result[i] == 1
         ):
             enter_long_signal[i] = False
             exit_long_signal[i] = True
-            exit_short_signal[i] = True
-        if psar_reversal_result[i] == 1:
-            enter_long_signal[i] = False
-            exit_long_signal[i] = True
-            exit_short_signal[i] = True
+            exit_short_signal[i] = False
+
     elif position_status_result[i] in IS_SHORT_POSITION:
         exit_price = close_arr[i] if close_for_reversal else high_arr[i]
+
         if (
-            exit_price > atr_sl_price_result[i]
+            exit_price > pct_sl_result[i]
+            or exit_price < pct_tp_result[i]
+            or exit_price > pct_tsl_result[i]
+            or exit_price > atr_sl_price_result[i]
             or exit_price < atr_tp_price_result[i]
             or exit_price > atr_tsl_price_result[i]
+            or psar_reversal_result[i] == 1
         ):
             enter_long_signal[i] = False
-            exit_long_signal[i] = True
-            exit_short_signal[i] = True
-        if psar_reversal_result[i] == 1:
-            enter_long_signal[i] = False
-            exit_long_signal[i] = True
+            exit_long_signal[i] = False
             exit_short_signal[i] = True
