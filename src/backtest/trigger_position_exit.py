@@ -115,12 +115,12 @@ def calculate_exit_triggers(
     # 用i在当下仓位及时计算离场信号exit_long_trigger_result, 离场信号会在下一个循环触发交易
     # psar tsl和atr tsl行为类似,每次开仓都初始化,从而跟踪仓位状态
     if position_status_result[i] in (1, 4):  # 多头开仓或反手
-        pct_sl_result[i] = pct_sl_result[i] * (1 - pct_sl)
-        pct_tp_result[i] = pct_tp_result[i] * (1 + pct_tp)
-        pct_tsl_result[i] = pct_tsl_result[i] * (1 - pct_tsl)
+        pct_sl_result[i] = target_price * (1 - pct_sl)
+        pct_tp_result[i] = target_price * (1 + pct_tp)
+        pct_tsl_result[i] = target_price * (1 - pct_tsl)
 
-        atr_sl_price_result[i] = trigger_price_result[i] - atr_sl
-        atr_tp_price_result[i] = trigger_price_result[i] + atr_tp
+        atr_sl_price_result[i] = target_price - atr_sl
+        atr_tp_price_result[i] = target_price + atr_tp
         atr_tsl_price_result[i] = target_price - atr_tsl
 
         (
@@ -165,12 +165,12 @@ def calculate_exit_triggers(
         )
 
     elif position_status_result[i] in (-1, -4):  # 空头开仓或反手
-        pct_sl_result[i] = pct_sl_result[i] * (1 + pct_sl)
-        pct_tp_result[i] = pct_tp_result[i] * (1 - pct_tp)
-        pct_tsl_result[i] = pct_tsl_result[i] * (1 + pct_tsl)
+        pct_sl_result[i] = target_price * (1 + pct_sl)
+        pct_tp_result[i] = target_price * (1 - pct_tp)
+        pct_tsl_result[i] = target_price * (1 + pct_tsl)
 
-        atr_sl_price_result[i] = trigger_price_result[i] + atr_sl
-        atr_tp_price_result[i] = trigger_price_result[i] - atr_tp
+        atr_sl_price_result[i] = target_price + atr_sl
+        atr_tp_price_result[i] = target_price - atr_tp
         atr_tsl_price_result[i] = target_price + atr_tsl
 
         (
