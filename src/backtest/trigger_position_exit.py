@@ -22,8 +22,8 @@ nb_bool_type = dtype_dict["nb"]["bool"]
 signature = nb.void(
     nb_int_type,  # i
     nb_int_type,  # last_i
-    nb_float_type[:, :],  # tohlcv
     nb_float_type,  # target_price
+    nb_float_type[:, :],  # tohlcv
     nb_bool_type[:, :],  # signal_result_child
     nb_float_type[:, :],  # backtest_result_child
     nb_bool_type[:],  # temp_psar_is_long
@@ -53,8 +53,8 @@ signature = nb.void(
 def calculate_exit_triggers(
     i,
     last_i,
-    tohlcv,
     target_price,
+    tohlcv,
     signal_result_child,
     backtest_result_child,
     temp_psar_is_long,
@@ -78,7 +78,7 @@ def calculate_exit_triggers(
     根据当前K线数据和仓位状态，计算止损止盈触发价格和离场信号。
     """
 
-    # 6. 从 tohlcv 中提取时间、开盘、最高、最低、收盘、成交量数组
+    # 从 tohlcv 中提取时间、开盘、最高、最低、收盘、成交量数组
     time_arr = tohlcv[:, 0]
     open_arr = tohlcv[:, 1]
     high_arr = tohlcv[:, 2]
@@ -94,18 +94,22 @@ def calculate_exit_triggers(
 
     # 提取回测结果数组
     position_status_result = backtest_result_child[:, 0]
-    trigger_price_result = backtest_result_child[:, 1]
-    pct_sl_result = backtest_result_child[:, 2]
-    pct_tp_result = backtest_result_child[:, 3]
-    pct_tsl_result = backtest_result_child[:, 4]
-    atr_price_result = backtest_result_child[:, 5]
-    atr_sl_price_result = backtest_result_child[:, 6]
-    atr_tp_price_result = backtest_result_child[:, 7]
-    atr_tsl_price_result = backtest_result_child[:, 8]
-    psar_long_result = backtest_result_child[:, 9]
-    psar_short_result = backtest_result_child[:, 10]
-    psar_af_result = backtest_result_child[:, 11]
-    psar_reversal_result = backtest_result_child[:, 12]
+    entry_price_result = backtest_result_child[:, 1]
+    exit_price_result = backtest_result_child[:, 2]
+    equity_result = backtest_result_child[:, 3]
+    balance_result = backtest_result_child[:, 4]
+    drawdown_result = backtest_result_child[:, 5]
+    pct_sl_result = backtest_result_child[:, 6]
+    pct_tp_result = backtest_result_child[:, 7]
+    pct_tsl_result = backtest_result_child[:, 8]
+    atr_price_result = backtest_result_child[:, 9]
+    atr_sl_price_result = backtest_result_child[:, 10]
+    atr_tp_price_result = backtest_result_child[:, 11]
+    atr_tsl_price_result = backtest_result_child[:, 12]
+    psar_long_result = backtest_result_child[:, 13]
+    psar_short_result = backtest_result_child[:, 14]
+    psar_af_result = backtest_result_child[:, 15]
+    psar_reversal_result = backtest_result_child[:, 16]
 
     atr = atr_price_result[i]
     atr_sl = atr * atr_sl_multiplier

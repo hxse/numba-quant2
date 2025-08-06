@@ -52,15 +52,16 @@ def process_trade_logic(
     exit_short_signal = signal_result_child[:, 3]
 
     position_status_result = backtest_result_child[:, 0]
-    trigger_price_result = backtest_result_child[:, 1]
+    entry_price_result = backtest_result_child[:, 1]
+    exit_price_result = backtest_result_child[:, 2]
 
     # 根据上一根K线仓位，更新当前仓位为“持有”
     if position_status_result[last_i] in IS_LONG_POSITION:
         position_status_result[i] = 2
-        trigger_price_result[i] = trigger_price_result[last_i]
+        entry_price_result[i] = entry_price_result[last_i]
     elif position_status_result[last_i] in IS_SHORT_POSITION:
         position_status_result[i] = -2
-        trigger_price_result[i] = trigger_price_result[last_i]
+        entry_price_result[i] = entry_price_result[last_i]
 
     # 根据信号处理开平仓逻辑
     if (
@@ -69,23 +70,25 @@ def process_trade_logic(
         and position_status_result[i] in IS_SHORT_POSITION
     ):
         position_status_result[i] = 4  # 反手
-        trigger_price_result[i] = target_price
+        entry_price_result[i] = target_price
+        exit_price_result[i] = target_price
     elif (
         enter_short_signal[last_i]
         and exit_long_signal[last_i]
         and position_status_result[i] in IS_LONG_POSITION
     ):
         position_status_result[i] = -4  # 反手
-        trigger_price_result[i] = target_price
+        entry_price_result[i] = target_price
+        exit_price_result[i] = target_price
     elif exit_long_signal[last_i] and position_status_result[i] in IS_LONG_POSITION:
         position_status_result[i] = 3  # 平仓
-        trigger_price_result[i] = target_price
+        exit_price_result[i] = target_price
     elif exit_short_signal[last_i] and position_status_result[i] in IS_SHORT_POSITION:
         position_status_result[i] = -3  # 平仓
-        trigger_price_result[i] = target_price
+        exit_price_result[i] = target_price
     elif enter_long_signal[last_i] and position_status_result[i] in IS_NO_POSITION:
         position_status_result[i] = 1  # 开多
-        trigger_price_result[i] = target_price
+        entry_price_result[i] = target_price
     elif enter_short_signal[last_i] and position_status_result[i] in IS_NO_POSITION:
         position_status_result[i] = -1  # 开空
-        trigger_price_result[i] = target_price
+        entry_price_result[i] = target_price

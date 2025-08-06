@@ -9,12 +9,11 @@ from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
 
 
-from src.indicators.psar import psar_init, psar_update
-
 from src.indicators.atr import calculate_atr
 
 from .position_manager import process_trade_logic
 from .trigger_position_exit import calculate_exit_triggers
+from .calculate_balance import calc_balance
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
@@ -63,27 +62,32 @@ def calc_backtest(params_child):
     enter_short_signal = signal_result_child[:, 2]
     exit_short_signal = signal_result_child[:, 3]
 
-    # 从 backtest_result_child 中提取回测结果数组
+    # 提取回测结果数组
     position_status_result = backtest_result_child[:, 0]
-    trigger_price_result = backtest_result_child[:, 1]
-    # percentage 相关
-    pct_sl_result = backtest_result_child[:, 2]
-    pct_tp_result = backtest_result_child[:, 3]
-    pct_tsl_result = backtest_result_child[:, 4]
-    # atr 相关
-    atr_price_result = backtest_result_child[:, 5]
-    atr_sl_price_result = backtest_result_child[:, 6]
-    atr_tp_price_result = backtest_result_child[:, 7]
-    atr_tsl_price_result = backtest_result_child[:, 8]
-    # psar 相关
-    psar_long_result = backtest_result_child[:, 9]
-    psar_short_result = backtest_result_child[:, 10]
-    psar_af_result = backtest_result_child[:, 11]
-    psar_reversal_result = backtest_result_child[:, 12]
+    entry_price_result = backtest_result_child[:, 1]
+    exit_price_result = backtest_result_child[:, 2]
+    equity_result = backtest_result_child[:, 3]
+    balance_result = backtest_result_child[:, 4]
+    drawdown_result = backtest_result_child[:, 5]
+    pct_sl_result = backtest_result_child[:, 6]
+    pct_tp_result = backtest_result_child[:, 7]
+    pct_tsl_result = backtest_result_child[:, 8]
+    atr_price_result = backtest_result_child[:, 9]
+    atr_sl_price_result = backtest_result_child[:, 10]
+    atr_tp_price_result = backtest_result_child[:, 11]
+    atr_tsl_price_result = backtest_result_child[:, 12]
+    psar_long_result = backtest_result_child[:, 13]
+    psar_short_result = backtest_result_child[:, 14]
+    psar_af_result = backtest_result_child[:, 15]
+    psar_reversal_result = backtest_result_child[:, 16]
 
     # 0无仓位,1开多,2持多,3平多,4平空开多,-1开空,-2持空,-3平空,-4平多开空
     position_status_result[:] = 0
-    trigger_price_result[:] = np.nan
+    entry_price_result[:] = np.nan
+    exit_price_result[:] = np.nan
+    equity_result[:] = np.nan
+    balance_result[:] = np.nan
+    drawdown_result[:] = np.nan
     pct_sl_result[:] = np.nan
     pct_tp_result[:] = np.nan
     pct_tsl_result[:] = np.nan
@@ -96,11 +100,12 @@ def calc_backtest(params_child):
     psar_af_result[:] = np.nan
     psar_reversal_result[:] = np.nan
 
-    temp_tr_array = float_temp_array_child[:, 0]  # temp_tr_array
+    temp_max_balance_array = float_temp_array_child[:, 0]  # temp_max_balance_array
+    temp_tr_array = float_temp_array_child[:, 1]  # temp_tr_array
+    temp_psar_current = float_temp_array_child[:, 2]  # temp_psar_current
+    temp_psar_ep = float_temp_array_child[:, 3]  # temp_psar_ep
 
     temp_psar_is_long = bool_temp_array_child[:, 0]  # temp_psar_is_long
-    temp_psar_current = float_temp_array_child[:, 1]  # temp_psar_current
-    temp_psar_ep = float_temp_array_child[:, 2]  # temp_psar_ep
 
     temp_psar_is_long[:] = False
     temp_psar_current[:] = np.nan
@@ -129,6 +134,13 @@ def calc_backtest(params_child):
     psar_af_step = 0.02
     psar_max_af = 0.2
 
+    init_money = 2000
+
+    equity_result[:] = init_money
+    balance_result[:] = init_money
+    drawdown_result[:] = init_money
+    temp_max_balance_array[:] = init_money
+
     # 全局计算atr
     calculate_atr(
         high_arr, low_arr, close_arr, atr_preiod, atr_price_result, temp_tr_array
@@ -155,8 +167,8 @@ def calc_backtest(params_child):
         calculate_exit_triggers(
             i,
             last_i,
-            tohlcv,
             target_price,
+            tohlcv,
             signal_result_child,
             backtest_result_child,
             temp_psar_is_long,
@@ -175,4 +187,21 @@ def calc_backtest(params_child):
             psar_af_step,
             psar_max_af,
             close_for_reversal,
+        )
+
+        calc_balance(
+            i,
+            last_i,
+            target_price,
+            tohlcv,
+            position_status_result,
+            entry_price_result,
+            exit_price_result,
+            equity_result,
+            balance_result,
+            drawdown_result,
+            temp_max_balance_array,
+            IS_LONG_POSITION,
+            IS_SHORT_POSITION,
+            IS_NO_POSITION,
         )
