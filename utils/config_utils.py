@@ -63,15 +63,16 @@ def get_params(
     indicator_enabled={},
     indicator_update2={},
     indicator_enabled2={},
-    signal_params=[],
-    backtest_params=[],
+    signal_name="",
+    backtest_params={},
     dtype_dict=default_dtype_dict,
 ):
-    signal_params, dependency, dependency2 = get_signal_params(
-        signal_name=signal_params, dtype_dict=dtype_dict
+    signal_params, dependency, dependency2, exit_control = get_signal_params(
+        signal_name=signal_name, dtype_dict=dtype_dict
     )
     indicator_enabled = {**indicator_enabled, **dependency}
     indicator_enabled2 = {**indicator_enabled2, **dependency2}
+    backtest_params = {**backtest_params, **exit_control}
 
     indicator_params = get_indicator_params(
         num, update_params=indicator_update, dtype_dict=dtype_dict
@@ -208,7 +209,12 @@ def get_signal_params(signal_name="", dtype_dict=default_dtype_dict):
     if signal_name in default_signal_template:
         v = default_signal_template[signal_name]
         params = np.array([v["id"]], dtype=dtype_dict["np"]["int"])
-        return (ensure_c_contiguous(params), v["dependency"], v["dependency2"])
+        return (
+            ensure_c_contiguous(params),
+            v["dependency"],
+            v["dependency2"],
+            v["exit_control"],
+        )
     else:
         raise RuntimeError(f"检测不到合法的signal name: {signal_name}")
 

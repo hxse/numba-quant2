@@ -28,6 +28,15 @@ simple_spec = {
     "name": "simple",
     "dependency": {sma_name: True, sma2_name: True},
     "dependency2": {sma_name: True, sma2_name: True},
+    "exit_control": {
+        "pct_sl_enable": True,
+        "pct_tp_enable": False,
+        "pct_tsl_enable": False,
+        "atr_sl_enable": True,
+        "atr_tp_enable": False,
+        "atr_tsl_enable": False,
+        "psar_enable": False,
+    },
 }
 simple_id = simple_spec["id"]
 simple_name = simple_spec["name"]
