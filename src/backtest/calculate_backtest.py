@@ -136,23 +136,26 @@ def calc_backtest(params_child):
     IS_SHORT_POSITION = (-1, -2, -4)
     IS_NO_POSITION = (0, 3, -3)
 
-    # percentage参数, 目前先硬编码
-    pct_sl = 0.02
-    pct_tp = 0.02
-    pct_tsl = 0.02
-
-    # ATR参数, 目前先硬编码
-    atr_preiod = 14
-    atr_sl_multiplier = 2.0
-    atr_tp_multiplier = 2.0
-    atr_tsl_multiplier = 2.0
-
     slippage_multiplier = 0.5  # 0.5倍atr的滑点
 
+    # percentage参数
+    pct_enable = backtest_params_child[0]
+    pct_sl = backtest_params_child[1]
+    pct_tp = backtest_params_child[2]
+    pct_tsl = backtest_params_child[3]
+
+    # ATR参数, 目前先硬编码
+    atr_enable = backtest_params_child[4]
+    atr_preiod = backtest_params_child[5]
+    atr_sl_multiplier = backtest_params_child[6]
+    atr_tp_multiplier = backtest_params_child[7]
+    atr_tsl_multiplier = backtest_params_child[8]
+
     # PSAR参数, 目前先硬编码
-    psar_af0 = 0.02
-    psar_af_step = 0.02
-    psar_max_af = 0.2
+    psar_enable = backtest_params_child[9]
+    psar_af0 = backtest_params_child[10]
+    psar_af_step = backtest_params_child[11]
+    psar_max_af = backtest_params_child[12]
 
     init_money = 2000
 
@@ -197,12 +200,15 @@ def calc_backtest(params_child):
             IS_LONG_POSITION,
             IS_SHORT_POSITION,
             IS_NO_POSITION,
+            pct_enable,
             pct_sl,
             pct_tp,
             pct_tsl,
+            atr_enable,
             atr_sl_multiplier,
             atr_tp_multiplier,
             atr_tsl_multiplier,
+            psar_enable,
             psar_af0,
             psar_af_step,
             psar_max_af,

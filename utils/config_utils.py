@@ -22,6 +22,22 @@ default_signal_template = {
     simple_name: simple_spec,
 }
 
+default_backtest_template = {
+    "pct_enable": False,
+    "pct_sl": 0.02,
+    "pct_tp": 0.02,
+    "pct_tsl": 0.02,
+    "atr_enable": False,
+    "atr_preiod": 14,
+    "atr_sl_multiplier": 2.0,
+    "atr_tp_multiplier": 2.0,
+    "atr_tsl_multiplier": 2.0,
+    "psar_enable": False,
+    "psar_af0": 0.02,
+    "psar_af_step": 0.02,
+    "psar_max_af": 0.2,
+}
+
 
 def get_dtype_dict(enable64=True):
     return get_numba_data_types(enable64=enable64)
@@ -193,7 +209,14 @@ def get_signal_params(signal_name="", dtype_dict=default_dtype_dict):
 
 
 def get_backtest_params(num=1, params=[], dtype_dict=default_dtype_dict):
-    default_params = [[0] for i in range(num)]
+    res = []
+    for k, v in default_backtest_template.items():
+        if k in params:
+            res.append(params[k])
+        else:
+            res.append(v)
+
+    default_params = [res for i in range(num)]
     params = np.array(default_params, dtype=dtype_dict["np"]["float"])
     return ensure_c_contiguous(params)
 

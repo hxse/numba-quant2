@@ -32,12 +32,15 @@ signature = nb.void(
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_LONG_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_SHORT_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_NO_POSITION
+    nb_bool_type,  # pct_enable
     nb_float_type,  # percentage_sl
     nb_float_type,  # percentage_tp
     nb_float_type,  # percentage_tsl
+    nb_bool_type,  # atr_enable
     nb_float_type,  # atr_sl_multiplier
     nb_float_type,  # atr_tp_multiplier
     nb_float_type,  # atr_tsl_multiplier
+    nb_bool_type,  # psar_enable
     nb_float_type,  # psar_af0
     nb_float_type,  # psar_af_step
     nb_float_type,  # psar_max_af
@@ -63,12 +66,15 @@ def calculate_exit_triggers(
     IS_LONG_POSITION,
     IS_SHORT_POSITION,
     IS_NO_POSITION,
+    pct_enable,
     pct_sl,
     pct_tp,
     pct_tsl,
+    atr_enable,
     atr_sl_multiplier,
     atr_tp_multiplier,
     atr_tsl_multiplier,
+    psar_enable,
     psar_af0,
     psar_af_step,
     psar_max_af,
@@ -302,31 +308,70 @@ def calculate_exit_triggers(
     if position_status_result[i] in IS_LONG_POSITION:
         exit_price = close_arr[i] if close_for_reversal else low_arr[i]
 
-        if (
-            exit_price < pct_sl_result[i]
-            or exit_price > pct_tp_result[i]
-            or exit_price < pct_tsl_result[i]
-            or exit_price < atr_sl_price_result[i]
-            or exit_price > atr_tp_price_result[i]
-            or exit_price < atr_tsl_price_result[i]
-            or psar_reversal_result[i] == 1
-        ):
-            enter_long_signal[i] = False
+        # 假设 i 是循环变量
+        is_exit_signal = False
+
+        # 检查 pct_enable 相关的条件
+        if pct_enable:
+            if (
+                exit_price < pct_sl_result[i]
+                or exit_price > pct_tp_result[i]
+                or exit_price < pct_tsl_result[i]
+            ):
+                is_exit_signal = True
+
+        # 检查 atr_enable 相关的条件
+        if atr_enable:
+            if (
+                exit_price < atr_sl_price_result[i]
+                or exit_price > atr_tp_price_result[i]
+                or exit_price < atr_tsl_price_result[i]
+            ):
+                is_exit_signal = True
+
+        # 检查 psar_enable 相关的条件
+        if psar_enable:
+            if psar_reversal_result[i] == 1:
+                is_exit_signal = True
+
+        # 如果任何一个条件为真，则执行信号操作
+        if is_exit_signal:
             exit_long_signal[i] = True
+            enter_long_signal[i] = False
             exit_short_signal[i] = False
 
     elif position_status_result[i] in IS_SHORT_POSITION:
         exit_price = close_arr[i] if close_for_reversal else high_arr[i]
 
-        if (
-            exit_price > pct_sl_result[i]
-            or exit_price < pct_tp_result[i]
-            or exit_price > pct_tsl_result[i]
-            or exit_price > atr_sl_price_result[i]
-            or exit_price < atr_tp_price_result[i]
-            or exit_price > atr_tsl_price_result[i]
-            or psar_reversal_result[i] == 1
-        ):
-            enter_long_signal[i] = False
-            exit_long_signal[i] = False
+        # 假设 i 是循环变量
+        is_exit_short_signal = False
+
+        # 检查 pct 相关的做空平仓条件
+        # 注意：这里和做多平仓的逻辑相反，但假设你提供的就是正确的逻辑
+        if pct_enable:
+            if (
+                exit_price > pct_sl_result[i]
+                or exit_price < pct_tp_result[i]
+                or exit_price > pct_tsl_result[i]
+            ):
+                is_exit_short_signal = True
+
+        # 检查 atr 相关的做空平仓条件
+        if atr_enable:
+            if (
+                exit_price > atr_sl_price_result[i]
+                or exit_price < atr_tp_price_result[i]
+                or exit_price > atr_tsl_price_result[i]
+            ):
+                is_exit_short_signal = True
+
+        # 检查 psar 相关的做空平仓条件
+        if psar_enable:
+            if psar_reversal_result[i] == 1:
+                is_exit_short_signal = True
+
+        # 如果任何一个条件为真，则执行信号操作
+        if is_exit_short_signal:
             exit_short_signal[i] = True
+            enter_short_signal[i] = False
+            exit_long_signal[i] = False
