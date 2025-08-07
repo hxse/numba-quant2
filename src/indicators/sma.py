@@ -25,7 +25,7 @@ sma_spec = {
     "result_count": 1,
     "temp_count": 0,
 }
-sma2_spec = {**sma_spec, "id": sma2_id, "name": sma2_name}
+sma2_spec = {**sma_spec, "id": sma2_id, "name": sma2_name, "result_name": ["sma2"]}
 
 
 from utils.numba_params import nb_params

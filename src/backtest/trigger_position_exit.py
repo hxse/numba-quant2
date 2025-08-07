@@ -32,9 +32,9 @@ signature = nb.void(
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_LONG_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_SHORT_POSITION
     nb.types.Tuple((nb_int_type, nb_int_type, nb_int_type)),  # IS_NO_POSITION
-    nb_float_type,  # percentage_sl,
-    nb_float_type,  # percentage_tp,
-    nb_float_type,  # percentage_tsl,
+    nb_float_type,  # percentage_sl
+    nb_float_type,  # percentage_tp
+    nb_float_type,  # percentage_tsl
     nb_float_type,  # atr_sl_multiplier
     nb_float_type,  # atr_tp_multiplier
     nb_float_type,  # atr_tsl_multiplier

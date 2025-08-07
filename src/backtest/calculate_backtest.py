@@ -20,6 +20,26 @@ nb_int_type = dtype_dict["nb"]["int"]
 nb_float_type = dtype_dict["nb"]["float"]
 nb_bool_type = dtype_dict["nb"]["bool"]
 
+backtest_result_name = [
+    "position_status",
+    "entry_price",
+    "exit_price",
+    "equity",
+    "balance",
+    "drawdown",
+    "pct_sl",
+    "pct_tp",
+    "pct_tsl",
+    "atr_price",
+    "atr_sl_price",
+    "atr_tp_price",
+    "atr_tsl_price",
+    "psar_long",
+    "psar_short",
+    "psar_af",
+    "psar_reversal",
+]
+backtest_result_count = len(backtest_result_name)
 
 params_child_signature = get_params_child_signature(
     nb_int_type, nb_float_type, nb_bool_type

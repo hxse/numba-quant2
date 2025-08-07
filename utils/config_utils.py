@@ -6,8 +6,21 @@ from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, s
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 from src.indicators.atr import atr_id, atr_name, atr_spec
 from src.indicators.psar import psar_id, psar_name, psar_spec
+from src.signal.simple_template import simple_name, simple_spec
 
 indicator_count = psar_id + 1  # 最大的指标id值+1
+
+default_indicators_template = {
+    sma_name: sma_spec,
+    sma2_name: sma2_spec,
+    bbands_name: bbands_spec,
+    atr_name: atr_spec,
+    psar_name: psar_spec,
+}
+
+default_signal_template = {
+    simple_name: simple_spec,
+}
 
 
 def get_dtype_dict(enable64=True):
@@ -33,13 +46,25 @@ def get_params(
     backtest_params=[],
     dtype_dict=default_dtype_dict,
 ):
+    signal_params, dependency, dependency2 = get_signal_params(
+        signal_name=signal_params, dtype_dict=dtype_dict
+    )
+    indicator_enabled = {**indicator_enabled, **dependency}
+    indicator_enabled2 = {**indicator_enabled2, **dependency2}
+
     indicator_params = get_indicator_params(
         num, update_params=indicator_update, dtype_dict=dtype_dict
     )
     indicator_enabled = get_indicator_enabled(
         update_params=indicator_enabled, dtype_dict=dtype_dict
     )
-    signal_params = get_signal_params(params=signal_params, dtype_dict=dtype_dict)
+    indicator_name = get_indicator_name(
+        indicator_enabled=indicator_enabled, dtype_dict=dtype_dict
+    )
+    indicator_col_name = get_indicator_col_name(
+        indicator_enabled=indicator_enabled, dtype_dict=dtype_dict
+    )
+
     backtest_params = get_backtest_params(
         num, params=backtest_params, dtype_dict=dtype_dict
     )
@@ -50,16 +75,26 @@ def get_params(
     indicator_enabled2 = get_indicator_enabled(
         update_params=indicator_enabled2, dtype_dict=dtype_dict
     )
+    indicator_name2 = get_indicator_name(
+        indicator_enabled=indicator_enabled2, dtype_dict=dtype_dict
+    )
+    indicator_col_name2 = get_indicator_col_name(
+        indicator_enabled=indicator_enabled2, dtype_dict=dtype_dict
+    )
 
     # todo 待完善
     mapping_data = get_mapping_data([], [], dtype_dict=dtype_dict)
 
     return {
         "indicator_params": indicator_params,
+        "indicator_name": indicator_name,
+        "indicator_col_name": indicator_col_name,
         "indicator_enabled": indicator_enabled,
         "signal_params": signal_params,
         "backtest_params": backtest_params,
         "indicator_params2": indicator_params2,
+        "indicator_name2": indicator_name2,
+        "indicator_col_name2": indicator_col_name2,
         "indicator_enabled2": indicator_enabled2,
         "mapping_data": mapping_data,
     }
@@ -82,19 +117,12 @@ def get_indicator_params(
     Raises:
         AssertionError: 如果 update 字典的格式不符合预期。
     """
-    default_template = {
-        sma_name: sma_spec,
-        sma2_name: sma2_spec,
-        bbands_name: bbands_spec,
-        atr_name: atr_spec,
-        psar_name: psar_spec,
-    }
-    assert indicator_count == len(default_template.keys()), (
-        f"指标数量不匹配 {indicator_count} {len(default_template.keys())}"
+    assert indicator_count == len(default_indicators_template.keys()), (
+        f"指标数量不匹配 {indicator_count} {len(default_indicators_template.keys())}"
     )
 
     id_history = set()
-    for k, v in default_template.items():
+    for k, v in default_indicators_template.items():
         assert v["param_count"] == len(v["default_params"]), (
             f"默认参数数量不对 {v['param_count']} {len(v['default_params'])}"
         )
@@ -104,7 +132,7 @@ def get_indicator_params(
     # 初始化默认参数
     default_params = {
         k: [v["default_params"] for i in range(num)]
-        for k, v in default_template.items()
+        for k, v in default_indicators_template.items()
     }
 
     # 遍历 update 字典并进行验证和更新
@@ -133,14 +161,35 @@ def get_indicator_params(
 
 def get_indicator_enabled(update_params={}, dtype_dict=default_dtype_dict):
     params = np.zeros(indicator_count, dtype=dtype_dict["np"]["bool"])
+
     for k, v in update_params.items():
-        params[k] = bool(v)
+        params[default_indicators_template[k]["id"]] = bool(v)
     return ensure_c_contiguous(params)
 
 
-def get_signal_params(params=[], dtype_dict=default_dtype_dict):
-    params = np.array(params, dtype=dtype_dict["np"]["int"])
-    return ensure_c_contiguous(params)
+def get_indicator_name(indicator_enabled=[], dtype_dict=default_dtype_dict):
+    indicator_name = []
+    for k, v in default_indicators_template.items():
+        if indicator_enabled[v["id"]]:
+            indicator_name.append(v["name"])
+    return indicator_name
+
+
+def get_indicator_col_name(indicator_enabled=[], dtype_dict=default_dtype_dict):
+    indicator_col_name = []
+    for k, v in default_indicators_template.items():
+        if indicator_enabled[v["id"]]:
+            indicator_col_name.append(v["result_name"])
+    return indicator_col_name
+
+
+def get_signal_params(signal_name="", dtype_dict=default_dtype_dict):
+    if signal_name in default_signal_template:
+        v = default_signal_template[signal_name]
+        params = np.array([v["id"]], dtype=dtype_dict["np"]["int"])
+        return (ensure_c_contiguous(params), v["dependency"], v["dependency2"])
+    else:
+        raise RuntimeError(f"检测不到合法的signal name: {signal_name}")
 
 
 def get_backtest_params(num=1, params=[], dtype_dict=default_dtype_dict):

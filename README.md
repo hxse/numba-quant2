@@ -10,5 +10,6 @@
   * `utils\data_types.py`文件下,修改`indicator_params`和`indicator_result`和`indicator_params_child`和`indicator_result_child`
   * `src\calculate_indicators.py`文件下,修改`calc_indicators`和`loop_indicators`
 # todo
-  * 这个`numba-quant2`比`num-quant`封装的更好, 但是依然难写
-  * 参考`minimal_example\numba_cache_example.py`, numba闭包时,有个令人讨厌的硬盘缓存问题,算了,不折腾了
+  * `utils\numba_unpack.py`文件下的initialize_outputs函数
+    * 需要弄一个全局缓存,复用结果数组的内存,在numba内核函数中初始化
+    * 如果数组形状不同,就新增缓存,用一个最大次数参数去,控制最大缓存多少个结果数组

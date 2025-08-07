@@ -1,6 +1,7 @@
 numba_params_temp.json
 database/
 text/
+output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

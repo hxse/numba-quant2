@@ -8,7 +8,7 @@ root_path = next(
 if root_path:
     sys.path.insert(0, str(root_path))
 
-
+from utils.export_file import export_csv
 from utils.json_tool import load_numba_config
 import time
 import typer
@@ -51,6 +51,9 @@ def main(
     from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
     from src.indicators.atr import atr_id, atr_name, atr_spec
     from src.indicators.psar import psar_id, psar_name, psar_spec
+    from src.signal.simple_template import simple_id, simple_name
+    from src.backtest.calculate_backtest import backtest_result_name
+    from src.calculate_signals import signal_result_name
 
     end_time = time.time()
     print(f"numba模块导入冷启动时间: {end_time - start_time:.4f} 秒")
@@ -92,26 +95,26 @@ def main(
                 psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
             },
             indicator_enabled={
-                sma_id: True,
-                # sma2_id: True,
-                # bbands_id: True,
-                # atr_id: True,
-                psar_id: True,
+                # sma_name: True,
+                # sma2_name: True,
+                # bbands_name: True,
+                # atr_name: True,
+                # psar_name: True,
             },
-            signal_params=[0, 0],
+            signal_params="simple",
             indicator_update2={
-                sma_name: [[14] for i in range(num)],
-                sma2_name: [[50] for i in range(num)],
+                sma_name: [[100] for i in range(num)],
+                sma2_name: [[200] for i in range(num)],
                 bbands_name: [[20, 2.0] for i in range(num)],
                 atr_name: [[14] for i in range(num)],
                 psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
             },
             indicator_enabled2={
-                sma_id: True,
-                # sma2_id: True,
-                # bbands_id: True,
-                # atr_id: True,
-                psar_id: True,
+                # sma_name: True,
+                # sma2_name: True,
+                # bbands_name: True,
+                # atr_name: True,
+                # psar_name: True,
             },
             dtype_dict=dtype_dict,
         )
@@ -131,6 +134,9 @@ def main(
 
         _func = entry_func_wrapper if task_time else entry_func
         (
+            tohlcv,
+            tohlcv2,
+            mapping_data,
             indicator_result,
             indicator_result2,
             signal_result,
@@ -159,9 +165,19 @@ def main(
             # print(f"{mode} indicator_result:", indicator_result)
             # print(f"{mode} indicator_result2:", indicator_result2)
             # print(f"{mode} signal_result:", signal_result)
-            import pdb
 
-            pdb.set_trace()
+            export_csv(
+                simple_name,
+                [["time", "open", "high", "low", "close", "volume"], tohlcv],
+                [["time", "open", "high", "low", "close", "volume"], tohlcv2],
+                [params["indicator_col_name"], indicator_result],
+                [params["indicator_col_name2"], indicator_result2],
+                [signal_result_name, signal_result],
+                [backtest_result_name, backtest_result],
+                params["indicator_enabled"],
+                params["indicator_enabled2"],
+                write_csv=True,
+            )
 
         if total_time:
             print(f"Task {i} total_time: {time.time() - start_time:.4f} seconds")

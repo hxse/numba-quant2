@@ -23,6 +23,17 @@ nb_float_type = dtype_dict["nb"]["float"]
 nb_bool_type = dtype_dict["nb"]["bool"]
 
 
+simple_spec = {
+    "id": 0,
+    "name": "simple",
+    "dependency": {sma_name: True, sma2_name: True},
+    "dependency2": {sma_name: True, sma2_name: True},
+}
+simple_id = simple_spec["id"]
+simple_name = simple_spec["name"]
+simple_dependency = simple_spec["dependency"]
+simple_dependency2 = simple_spec["dependency2"]
+
 signature = nb.void(
     nb_float_type[:, :],  # tohlcv
     nb_float_type[:, :],  # tohlcv2

@@ -3,7 +3,7 @@ import numpy as np
 from utils.data_types import get_params_child_signature
 
 from src.backtest.clean_signal import clean_signal
-from src.signal.simple_template import simple_signal
+from src.signal.simple_template import simple_signal, simple_id
 
 
 from utils.numba_params import nb_params
@@ -14,6 +14,15 @@ dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
 nb_float_type = dtype_dict["nb"]["float"]
 nb_bool_type = dtype_dict["nb"]["bool"]
+
+
+signal_result_name = [
+    "enter_long",
+    "exit_long",
+    "enter_short",
+    "exit_short",
+]
+signal_result_count = len(signal_result_name)
 
 
 params_child_signature = get_params_child_signature(
@@ -42,16 +51,20 @@ def calc_signal(params_child):
     (backtest_params_child, backtest_result_child) = backtest_args
     (int_temp_array_child, float_temp_array_child, bool_temp_array_child) = temp_args
 
-    if len(signal_params) > 1:
-        if signal_params[0] == 0 and signal_params[1] >= 0:
-            simple_signal(
-                tohlcv,
-                tohlcv2,
-                indicator_result_child,
-                indicator_result2_child,
-                signal_params,
-                signal_result_child,
-                temp_args,
-            )
+    id_array = (simple_id,)
+    func_array = (simple_signal,)
+
+    for i in range(len(id_array)):
+        if len(signal_params) > 0:
+            if signal_params[0] == id_array[i]:
+                func_array[i](
+                    tohlcv,
+                    tohlcv2,
+                    indicator_result_child,
+                    indicator_result2_child,
+                    signal_params,
+                    signal_result_child,
+                    temp_args,
+                )
 
     clean_signal(signal_result_child)

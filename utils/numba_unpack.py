@@ -12,6 +12,8 @@ from src.indicators.sma import sma_spec, sma2_spec
 from src.indicators.bbands import bbands_spec
 from src.indicators.atr import atr_id, atr_name, atr_spec
 from src.indicators.psar import psar_id, psar_name, psar_spec
+from src.backtest.calculate_backtest import backtest_result_count
+from src.calculate_signals import signal_result_count
 
 
 def initialize_outputs(
@@ -62,8 +64,8 @@ def initialize_outputs(
     tohlcv_smooth2 = np.full(tohlcv2_shape, np.nan, dtype=np_float_type)
 
     # --- Indicator Result Arrays ---
-    signal_output_dim = 4
-    backtest_output_dim = 15
+    signal_output_dim = signal_result_count
+    backtest_output_dim = backtest_result_count
     temp_float_num = max(
         temp_float_num,
         sma_spec["temp_count"] + sma2_spec["temp_count"] + bbands_spec["temp_count"],
@@ -313,6 +315,7 @@ def unpack_params_child(params, idx):
 
 def get_output(params):
     (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
+    (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data) = data_args
     (
         indicator_params,
         indicator_params2,
@@ -326,6 +329,9 @@ def get_output(params):
     (int_temp_array, float_temp_array, bool_temp_array) = temp_args
 
     return (
+        tohlcv,
+        tohlcv2,
+        mapping_data,
         indicator_result,
         indicator_result2,
         signal_result,
