@@ -139,23 +139,27 @@ def calc_backtest(params_child):
     slippage_multiplier = 0.5  # 0.5倍atr的滑点
 
     # percentage参数
-    pct_enable = backtest_params_child[0]
-    pct_sl = backtest_params_child[1]
-    pct_tp = backtest_params_child[2]
-    pct_tsl = backtest_params_child[3]
+    pct_sl_enable = backtest_params_child[0]
+    pct_tp_enable = backtest_params_child[1]
+    pct_tsl_enable = backtest_params_child[2]
+    pct_sl = backtest_params_child[3]
+    pct_tp = backtest_params_child[4]
+    pct_tsl = backtest_params_child[5]
 
     # ATR参数, 目前先硬编码
-    atr_enable = backtest_params_child[4]
-    atr_preiod = backtest_params_child[5]
-    atr_sl_multiplier = backtest_params_child[6]
-    atr_tp_multiplier = backtest_params_child[7]
-    atr_tsl_multiplier = backtest_params_child[8]
+    atr_sl_enable = backtest_params_child[6]
+    atr_tp_enable = backtest_params_child[7]
+    atr_tsl_enable = backtest_params_child[8]
+    atr_preiod = backtest_params_child[9]
+    atr_sl_multiplier = backtest_params_child[10]
+    atr_tp_multiplier = backtest_params_child[11]
+    atr_tsl_multiplier = backtest_params_child[12]
 
     # PSAR参数, 目前先硬编码
-    psar_enable = backtest_params_child[9]
-    psar_af0 = backtest_params_child[10]
-    psar_af_step = backtest_params_child[11]
-    psar_max_af = backtest_params_child[12]
+    psar_enable = backtest_params_child[13]
+    psar_af0 = backtest_params_child[14]
+    psar_af_step = backtest_params_child[15]
+    psar_max_af = backtest_params_child[16]
 
     init_money = 2000
 
@@ -200,11 +204,15 @@ def calc_backtest(params_child):
             IS_LONG_POSITION,
             IS_SHORT_POSITION,
             IS_NO_POSITION,
-            pct_enable,
+            pct_sl_enable,
+            pct_tp_enable,
+            pct_tsl_enable,
             pct_sl,
             pct_tp,
             pct_tsl,
-            atr_enable,
+            atr_sl_enable,
+            atr_tp_enable,
+            atr_tsl_enable,
             atr_sl_multiplier,
             atr_tp_multiplier,
             atr_tsl_multiplier,

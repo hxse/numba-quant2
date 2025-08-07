@@ -2,6 +2,7 @@ from utils.data_loading import load_tohlcv_from_csv, convert_tohlcv_numpy
 from utils.data_types import get_numba_data_types
 import numpy as np
 
+
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 from src.indicators.atr import atr_id, atr_name, atr_spec
@@ -23,11 +24,15 @@ default_signal_template = {
 }
 
 default_backtest_template = {
-    "pct_enable": False,
+    "pct_sl_enable": False,
+    "pct_tp_enable": False,
+    "pct_tsl_enable": False,
     "pct_sl": 0.02,
     "pct_tp": 0.02,
     "pct_tsl": 0.02,
-    "atr_enable": False,
+    "atr_sl_enable": True,
+    "atr_tp_enable": True,
+    "atr_tsl_enable": True,
     "atr_preiod": 14,
     "atr_sl_multiplier": 2.0,
     "atr_tp_multiplier": 2.0,
@@ -208,7 +213,8 @@ def get_signal_params(signal_name="", dtype_dict=default_dtype_dict):
         raise RuntimeError(f"检测不到合法的signal name: {signal_name}")
 
 
-def get_backtest_params(num=1, params=[], dtype_dict=default_dtype_dict):
+def get_backtest_params(num=1, params={}, dtype_dict=default_dtype_dict):
+    check_keys_exist(default_backtest_template, params)
     res = []
     for k, v in default_backtest_template.items():
         if k in params:
@@ -232,3 +238,28 @@ def perpare_data(path, data_size=None, dtype_dict=default_dtype_dict):
     np_data = convert_tohlcv_numpy(df_data, dtype_dict)
 
     return df_data, ensure_c_contiguous(np_data)
+
+
+def check_keys_exist(base_dict, new_dict):
+    """
+    检查 new_dict 中的所有键是否都存在于 base_dict 中。
+
+    参数:
+    - base_dict (dict): 作为基准的字典，包含所有允许的键。
+    - new_dict (dict): 需要被检查的字典。
+
+    如果 new_dict 存在不属于 base_dict 的键，将抛出 ValueError。
+    """
+    # 将字典的键转换为集合，以便进行高效的差集操作
+    base_keys = set(base_dict.keys())
+    new_keys = set(new_dict.keys())
+
+    # 找到 new_keys 中存在但 base_keys 中不存在的键
+    # 差集操作 (new_keys - base_keys) 会返回这些多余的键
+    extra_keys = new_keys - base_keys
+
+    # 如果 extra_keys 集合不为空，说明存在多余的键
+    if extra_keys:
+        raise ValueError(
+            f"提供的字典包含不合法的键: {', '.join(sorted(list(extra_keys)))}"
+        )
