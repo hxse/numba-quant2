@@ -46,90 +46,120 @@ class AssignOperator(IntEnum):
     BITWISE_OR = auto()  # 位或赋值 (例如 3)
 
 
+class TriggerOperator(IntEnum):
+    """
+    定义基于布尔条件的序列行为来触发一个操作的模式。
+    """
+
+    # 连续触发：只要条件为真，就持续触发。
+    CONTINUOUS = auto()
+
+    # 边缘触发：仅在布尔条件状态发生变化时触发。
+    # 这个成员可以同时处理从 False -> True 和 True -> False 的两种情况。
+    EDGE = auto()
+
+
 signature = nb.void(
     nb_float_type[:],  # array1
     nb_float_type[:],  # array2
     nb_bool_type[:],  # output
+    nb_bool_type[:],  # temp_array
     nb_int_type,  # comparison_mode
     nb_int_type,  # assign_mode
+    nb_int_type,  # trigger_mode
 )
 
+if nb_params["mode"] in ["normal", "njit"]:
 
-@nb_wrapper(
-    mode=nb_params["mode"],
-    signature=signature,
-    cache_enabled=nb_params.get("cache", True),
-)
-def bool_compare(array1, array2, output, comparison_mode, assign_mode):
-    if (
-        len(array1) != len(array2)
-        or len(output) < len(array1)
-        or len(output) < len(array2)
+    @nb_wrapper(
+        mode=nb_params["mode"],
+        signature=signature,
+        cache_enabled=nb_params.get("cache", True),
+    )
+    def bool_compare(
+        array1, array2, output, temp_array, comparison_mode, assign_mode, trigger_mode
     ):
-        return
-    if assign_mode == AssignOperator.ASSIGN:
+        if (
+            len(array1) != len(array2)
+            or len(output) < len(array1)
+            or len(output) < len(array2)
+        ):
+            return
+
+        # 计算大小比较
+        if comparison_mode == ComparisonOperator.eq:
+            temp_array[:] = array1 == array2
+        elif comparison_mode == ComparisonOperator.ne:
+            temp_array[:] = array1 != array2
+        elif comparison_mode == ComparisonOperator.gt:
+            temp_array[:] = array1 > array2
+        elif comparison_mode == ComparisonOperator.ge:
+            temp_array[:] = array1 >= array2
+        elif comparison_mode == ComparisonOperator.lt:
+            temp_array[:] = array1 < array2
+        elif comparison_mode == ComparisonOperator.le:
+            temp_array[:] = array1 <= array2
+
+        # 计算完大小比较后,计算异或
+        if assign_mode == AssignOperator.ASSIGN:
+            output[:] = temp_array
+        elif assign_mode == AssignOperator.BITWISE_AND:
+            output[:] = output & temp_array
+        elif assign_mode == AssignOperator.BITWISE_OR:
+            output[:] = output | temp_array
+
+        # 计算完大小比较和异或后,计算边缘触发
+        if trigger_mode == TriggerOperator.CONTINUOUS:
+            pass
+        elif trigger_mode == TriggerOperator.EDGE:
+            temp_array[1:] = output[:-1]
+            temp_array[0] = False
+            output[:] = output & ~temp_array
+
+elif nb_params["mode"] in ["cuda"]:
+
+    @nb_wrapper(
+        mode=nb_params["mode"],
+        signature=signature,
+        cache_enabled=nb_params.get("cache", True),
+    )
+    def bool_compare(
+        array1, array2, output, temp_array, comparison_mode, assign_mode, trigger_mode
+    ):
+        if (
+            len(array1) != len(array2)
+            or len(output) < len(array1)
+            or len(output) < len(array2)
+        ):
+            return
+
+        # 由于是在cuda设备函数内部,不存在并发,只能用循环线性处理
         for i in range(len(array1)):
+            # 计算大小比较
             if comparison_mode == ComparisonOperator.eq:
-                output[i] = array1[i] == array2[i]
+                temp_array[i] = array1[i] == array2[i]
             elif comparison_mode == ComparisonOperator.ne:
-                output[i] = array1[i] != array2[i]
+                temp_array[i] = array1[i] != array2[i]
             elif comparison_mode == ComparisonOperator.gt:
-                output[i] = array1[i] > array2[i]
+                temp_array[i] = array1[i] > array2[i]
             elif comparison_mode == ComparisonOperator.ge:
-                output[i] = array1[i] >= array2[i]
+                temp_array[i] = array1[i] >= array2[i]
             elif comparison_mode == ComparisonOperator.lt:
-                output[i] = array1[i] < array2[i]
+                temp_array[i] = array1[i] < array2[i]
             elif comparison_mode == ComparisonOperator.le:
-                output[i] = array1[i] <= array2[i]
-    elif assign_mode == AssignOperator.BITWISE_AND:
-        for i in range(len(array1)):
-            if comparison_mode == ComparisonOperator.eq:
-                output[i] = output[i] & (array1[i] == array2[i])
-            elif comparison_mode == ComparisonOperator.ne:
-                output[i] = output[i] & (array1[i] != array2[i])
-            elif comparison_mode == ComparisonOperator.gt:
-                output[i] = output[i] & (array1[i] > array2[i])
-            elif comparison_mode == ComparisonOperator.ge:
-                output[i] = output[i] & (array1[i] >= array2[i])
-            elif comparison_mode == ComparisonOperator.lt:
-                output[i] = output[i] & (array1[i] < array2[i])
-            elif comparison_mode == ComparisonOperator.le:
-                output[i] = output[i] & (array1[i] <= array2[i])
-    elif assign_mode == AssignOperator.BITWISE_OR:
-        for i in range(len(array1)):
-            if comparison_mode == ComparisonOperator.eq:
-                output[i] = output[i] | (array1[i] == array2[i])
-            elif comparison_mode == ComparisonOperator.ne:
-                output[i] = output[i] | (array1[i] != array2[i])
-            elif comparison_mode == ComparisonOperator.gt:
-                output[i] = output[i] | (array1[i] > array2[i])
-            elif comparison_mode == ComparisonOperator.ge:
-                output[i] = output[i] | (array1[i] >= array2[i])
-            elif comparison_mode == ComparisonOperator.lt:
-                output[i] = output[i] | (array1[i] < array2[i])
-            elif comparison_mode == ComparisonOperator.le:
-                output[i] = output[i] | (array1[i] <= array2[i])
+                temp_array[i] = array1[i] <= array2[i]
 
+            # 计算完大小比较后,计算异或
+            if assign_mode == AssignOperator.ASSIGN:
+                output[i] = temp_array[i]
+            elif assign_mode == AssignOperator.BITWISE_AND:
+                output[i] = output[i] & temp_array[i]
+            elif assign_mode == AssignOperator.BITWISE_OR:
+                output[i] = output[i] | temp_array[i]
 
-signature = nb.void(
-    nb_bool_type[:],  # array
-    nb_bool_type[:],  # output
-    nb_int_type,  # mode
-)
-
-
-@nb_wrapper(
-    mode=nb_params["mode"],
-    signature=signature,
-    cache_enabled=nb_params.get("cache", True),
-)
-def assign_elementwise(array, output, opt_mode):
-    if len(output) < len(array):
-        return
-    for i in range(len(array)):
-        if opt_mode == AssignOperator.ASSIGN:
-            output[i] = array[i]
-        elif opt_mode == AssignOperator.BITWISE_AND:
-            output[i] = output[i] & array[i]
-        elif opt_mode == AssignOperator.BITWISE_OR:
-            output[i] = output[i] | array[i]
+            # 计算完大小比较和异或后,计算边缘触发
+            if trigger_mode == TriggerOperator.CONTINUOUS:
+                pass
+            elif trigger_mode == TriggerOperator.EDGE:
+                if i >= 1:
+                    output[i] = output[i] & ~output[i - 1]

@@ -7,9 +7,9 @@ from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
 from .signal_tool import (
     bool_compare,
-    assign_elementwise,
     ComparisonOperator as co,
     AssignOperator as ao,
+    TriggerOperator as to,
 )
 
 
@@ -78,6 +78,10 @@ def simple_signal(
     signal_result_child,
     temp_args,
 ):
+    (int_temp_array, float_temp_array, bool_temp_array) = temp_args
+
+    temp_array = bool_temp_array[:, 0]
+
     close = tohlcv[:, 4]
 
     sma_indicator_result_child = indicator_result_child[sma_id]
@@ -97,26 +101,122 @@ def simple_signal(
     enter_short_signal = signal_result_child[:, 2]
     exit_short_signal = signal_result_child[:, 3]
 
-    bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.ASSIGN)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_long_signal,
+        temp_array,
+        co.gt,
+        ao.ASSIGN,
+        to.EDGE,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.ASSIGN)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_long_signal,
+        temp_array,
+        co.lt,
+        ao.ASSIGN,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.ASSIGN)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_short_signal,
+        temp_array,
+        co.lt,
+        ao.ASSIGN,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.ASSIGN)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_short_signal,
+        temp_array,
+        co.gt,
+        ao.ASSIGN,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_AND)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_long_signal,
+        temp_array,
+        co.gt,
+        ao.BITWISE_AND,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_AND)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_long_signal,
+        temp_array,
+        co.lt,
+        ao.BITWISE_AND,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_AND)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_short_signal,
+        temp_array,
+        co.lt,
+        ao.BITWISE_AND,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_AND)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_short_signal,
+        temp_array,
+        co.gt,
+        ao.BITWISE_AND,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, enter_long_signal, co.gt, ao.BITWISE_OR)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_long_signal,
+        temp_array,
+        co.gt,
+        ao.BITWISE_OR,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_long_signal, co.lt, ao.BITWISE_OR)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_long_signal,
+        temp_array,
+        co.lt,
+        ao.BITWISE_OR,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, enter_short_signal, co.lt, ao.BITWISE_OR)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        enter_short_signal,
+        temp_array,
+        co.lt,
+        ao.BITWISE_OR,
+        to.CONTINUOUS,
+    )
 
-    bool_compare(sma_result, sma2_result, exit_short_signal, co.gt, ao.BITWISE_OR)
+    bool_compare(
+        sma_result,
+        sma2_result,
+        exit_short_signal,
+        temp_array,
+        co.gt,
+        ao.BITWISE_OR,
+        to.CONTINUOUS,
+    )

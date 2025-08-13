@@ -1,8 +1,6 @@
 from numba import jit, njit, cuda
 import numpy as np
 
-_compiled_functions_cache = {}
-
 
 def nb_wrapper(
     mode: str,

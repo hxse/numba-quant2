@@ -20,49 +20,7 @@ params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type
 signature = nb.void(params_signature)
 
 
-if nb_params["mode"] == "normal":
-
-    @nb_wrapper(
-        mode=nb_params["mode"],
-        signature=signature,
-        cache_enabled=nb_params.get("cache", True),
-        parallel=True,
-    )
-    def parallel_calc(params):
-        (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
-
-        (
-            indicator_params,
-            indicator_params2,
-            indicator_enabled,
-            indicator_enabled2,
-            indicator_result,
-            indicator_result2,
-        ) = indicator_args
-
-        conf_count = get_conf_count(params)
-
-        for idx in nb.prange(conf_count):
-            _indicator_args = (
-                indicator_params,
-                indicator_params2,
-                indicator_enabled,
-                indicator_enabled2,
-                indicator_result,
-                indicator_result2,
-            )
-            _params = (
-                data_args,
-                _indicator_args,
-                signal_args,
-                backtest_args,
-                temp_args,
-            )
-            _params_child = unpack_params_child(_params, idx)
-
-            core_calc(_params_child)
-
-elif nb_params["mode"] == "njit":
+if nb_params["mode"] in ["normal", "njit"]:
 
     @nb_wrapper(
         mode=nb_params["mode"],
