@@ -16,7 +16,45 @@ from src.backtest.calculate_backtest import backtest_result_count
 from src.calculate_signals import signal_result_count
 
 
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
+
+
+def create_array(
+    mode: str,
+    shape: tuple[int, ...],
+    dtype: np.dtype,
+    fill: bool = False,
+    fill_value: any = None,
+):
+    """
+    根据模式创建并填充数组，或者仅创建空数组。
+
+    Args:
+        mode: 运行模式，可以是 "normal", "njit" 或 "cuda"。
+        shape: 数组的形状。
+        dtype: 数组的数据类型。
+        fill_value: 用于填充数组的值。仅在 fill=True 时有效。
+        fill: 一个布尔值，如果为 True，则创建并填充数组；如果为 False，则仅创建未初始化的空数组。
+    """
+    if mode in ["normal", "njit"]:
+        if fill:
+            return np.full(shape, fill_value, dtype=dtype)
+        else:
+            return np.empty(shape, dtype=dtype)
+    elif mode == "cuda":
+        d_array = nb.cuda.device_array(shape, dtype)
+        if fill:
+            d_array[:] = fill_value
+        return d_array
+    else:
+        raise ValueError(f"Invalid mode: {mode}")
+
+
 def initialize_outputs(
+    mode,
     tohlcv,
     tohlcv2,
     indicator_params,
@@ -48,8 +86,6 @@ def initialize_outputs(
      backtest_result, temp_arrays)
     """
 
-    # todo 等稳定了, 再让AI简化一下这个函数,现在先不弄
-
     np_int_type = dtype_dict["np"]["int"]
     np_float_type = dtype_dict["np"]["float"]
     np_bool_type = dtype_dict["np"]["bool"]
@@ -59,9 +95,8 @@ def initialize_outputs(
     tohlcv_rows = tohlcv_shape[0]
     tohlcv2_rows = tohlcv2_shape[0]
 
-    # --- Data Smooth Arrays ---
-    tohlcv_smooth = np.full(tohlcv_shape, np.nan, dtype=np_float_type)
-    tohlcv_smooth2 = np.full(tohlcv2_shape, np.nan, dtype=np_float_type)
+    tohlcv_smooth = create_array(mode, tohlcv_shape, np_float_type)
+    tohlcv_smooth2 = create_array(mode, tohlcv2_shape, np_float_type)
 
     # --- Indicator Result Arrays ---
     signal_output_dim = signal_result_count
@@ -73,59 +108,50 @@ def initialize_outputs(
 
     sma_output_dim = sma_spec["result_count"]
     sma_rows = tohlcv_rows if indicator_enabled[sma_spec["id"]] else min_rows
-    sma_result = np.full(
-        (conf_count, sma_rows, sma_output_dim), np.nan, dtype=np_float_type
-    )
+    sma_shape = (conf_count, sma_rows, sma_output_dim)
+    sma_result = create_array(mode, sma_shape, np_float_type)
 
     sma2_output_dim = sma2_spec["result_count"]
     sma2_rows = tohlcv_rows if indicator_enabled[sma2_spec["id"]] else min_rows
-    sma2_result = np.full(
-        (conf_count, sma2_rows, sma2_output_dim), np.nan, dtype=np_float_type
-    )
+    sma2_shape = (conf_count, sma2_rows, sma2_output_dim)
+    sma2_result = create_array(mode, sma2_shape, np_float_type)
 
     bbands_output_dim = bbands_spec["result_count"]
     bbands_rows = tohlcv_rows if indicator_enabled[bbands_spec["id"]] else min_rows
-    bbands_result = np.full(
-        (conf_count, bbands_rows, bbands_output_dim), np.nan, dtype=np_float_type
-    )
+    bbands_shape = (conf_count, bbands_rows, bbands_output_dim)
+    bbands_result = create_array(mode, bbands_shape, np_float_type)
 
     atr_output_dim = atr_spec["result_count"]
     atr_rows = tohlcv_rows if indicator_enabled[atr_spec["id"]] else min_rows
-    atr_result = np.full(
-        (conf_count, atr_rows, atr_output_dim), np.nan, dtype=np_float_type
-    )
+    atr_shape = (conf_count, atr_rows, atr_output_dim)
+    atr_result = create_array(mode, atr_shape, np_float_type)
 
     psar_output_dim = psar_spec["result_count"]
     psar_rows = tohlcv_rows if indicator_enabled[psar_spec["id"]] else min_rows
-    psar_result = np.full(
-        (conf_count, psar_rows, psar_output_dim), np.nan, dtype=np_float_type
-    )
+    psar_shape = (conf_count, psar_rows, psar_output_dim)
+    psar_result = create_array(mode, psar_shape, np_float_type)
+
     indicator_result = (sma_result, sma2_result, bbands_result, atr_result, psar_result)
 
     sma_rows2 = tohlcv2_rows if indicator_enabled2[sma_spec["id"]] else min_rows
-    sma_result2 = np.full(
-        (conf_count, sma_rows2, sma_output_dim), np.nan, dtype=np_float_type
-    )
+    sma_shape2 = (conf_count, sma_rows2, sma_output_dim)
+    sma_result2 = create_array(mode, sma_shape2, np_float_type)
 
     sma2_rows2 = tohlcv2_rows if indicator_enabled2[sma2_spec["id"]] else min_rows
-    sma2_result2 = np.full(
-        (conf_count, sma2_rows2, sma_output_dim), np.nan, dtype=np_float_type
-    )
+    sma2_shape2 = (conf_count, sma2_rows2, sma_output_dim)
+    sma2_result2 = create_array(mode, sma2_shape2, np_float_type)
 
     bbands_rows2 = tohlcv2_rows if indicator_enabled2[bbands_spec["id"]] else min_rows
-    bbands_result2 = np.full(
-        (conf_count, bbands_rows2, bbands_output_dim), np.nan, dtype=np_float_type
-    )
+    bbands_shape2 = (conf_count, bbands_rows2, bbands_output_dim)
+    bbands_result2 = create_array(mode, bbands_shape2, np_float_type)
 
     atr_rows2 = tohlcv2_rows if indicator_enabled2[atr_spec["id"]] else min_rows
-    atr_result2 = np.full(
-        (conf_count, atr_rows2, atr_output_dim), np.nan, dtype=np_float_type
-    )
+    atr_shape2 = (conf_count, atr_rows2, atr_output_dim)
+    atr_result2 = create_array(mode, atr_shape2, np_float_type)
 
     psar_rows2 = tohlcv2_rows if indicator_enabled2[psar_spec["id"]] else min_rows
-    psar_result2 = np.full(
-        (conf_count, psar_rows2, psar_output_dim), np.nan, dtype=np_float_type
-    )
+    psar_shape2 = (conf_count, psar_rows2, psar_output_dim)
+    psar_result2 = create_array(mode, psar_shape2, np_float_type)
 
     indicator_result2 = (
         sma_result2,
@@ -136,36 +162,32 @@ def initialize_outputs(
     )
 
     # --- Signal Result Arrays ---
-    signal_result = np.full(
-        (conf_count, tohlcv_rows, signal_output_dim), False, dtype=np_bool_type
-    )
+    signal_shape = (conf_count, tohlcv_rows, signal_output_dim)
+    signal_result = create_array(mode, signal_shape, np_bool_type)
 
     # --- Backtest Result Array ---
-    backtest_result = np.full(
-        (conf_count, tohlcv_rows, backtest_output_dim), np.nan, dtype=np_float_type
-    )
+    backtest_shape = (conf_count, tohlcv_rows, backtest_output_dim)
+    backtest_result = create_array(mode, backtest_shape, np_float_type)
 
     # --- Temporary Arrays ---
-    int_temp_array = np.full(
-        (conf_count, tohlcv_rows, temp_int_num), 0, dtype=np_int_type
-    )
-    float_temp_array = np.full(
-        (conf_count, tohlcv_rows, temp_float_num), 0, dtype=np_float_type
-    )
-    bool_temp_array = np.full(
-        (conf_count, tohlcv_rows, temp_bool_num), 0, dtype=np_bool_type
-    )
+    int_temp_shape = (conf_count, tohlcv_rows, temp_int_num)
+    int_temp_array = create_array(mode, int_temp_shape, np_int_type)
+
+    float_temp_shape = (conf_count, tohlcv_rows, temp_float_num)
+    float_temp_array = create_array(mode, float_temp_shape, np_float_type)
+
+    bool_temp_shape = (conf_count, tohlcv_rows, temp_bool_num)
+    bool_temp_array = create_array(mode, bool_temp_shape, np_bool_type)
 
     # --- Temporary Arrays ---
-    int_temp_array2 = np.full(
-        (conf_count, tohlcv2_rows, temp_int_num), 0, dtype=np_int_type
-    )
-    float_temp_array2 = np.full(
-        (conf_count, tohlcv2_rows, temp_float_num), 0, dtype=np_float_type
-    )
-    bool_temp_array2 = np.full(
-        (conf_count, tohlcv2_rows, temp_bool_num), 0, dtype=np_bool_type
-    )
+    int_temp_shape2 = (conf_count, tohlcv2_rows, temp_int_num)
+    int_temp_array2 = create_array(mode, int_temp_shape2, np_int_type)
+
+    float_temp_shape2 = (conf_count, tohlcv2_rows, temp_float_num)
+    float_temp_array2 = create_array(mode, float_temp_shape2, np_float_type)
+
+    bool_temp_shape2 = (conf_count, tohlcv2_rows, temp_bool_num)
+    bool_temp_array2 = create_array(mode, bool_temp_shape2, np_bool_type)
 
     temp_args = (
         int_temp_array,
@@ -187,18 +209,7 @@ def initialize_outputs(
     )
 
 
-def unpack_params(
-    outputs,
-    tohlcv,
-    tohlcv2,
-    mapping_data,
-    indicator_params,
-    indicator_params2,
-    indicator_enabled,
-    indicator_enabled2,
-    signal_params,
-    backtest_params,
-):
+def unpack_params(outputs, inputs):
     (
         tohlcv_smooth,
         tohlcv_smooth2,
@@ -208,7 +219,17 @@ def unpack_params(
         backtest_result,
         temp_args,
     ) = outputs
-
+    (
+        tohlcv,
+        tohlcv2,
+        mapping_data,
+        indicator_params,
+        indicator_params2,
+        indicator_enabled,
+        indicator_enabled2,
+        signal_params,
+        backtest_params,
+    ) = inputs
     data_args = (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data)
     indicator_args = (
         indicator_params,
@@ -224,11 +245,6 @@ def unpack_params(
     cpu_params = (data_args, indicator_args, signal_args, backtest_args, temp_args)
     return cpu_params
 
-
-dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
-nb_int_type = dtype_dict["nb"]["int"]
-nb_float_type = dtype_dict["nb"]["float"]
-nb_bool_type = dtype_dict["nb"]["bool"]
 
 params_type = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
 return_type = get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type)
@@ -377,11 +393,6 @@ def get_output(params):
     )
 
 
-dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
-nb_int_type = dtype_dict["nb"]["int"]
-nb_float_type = dtype_dict["nb"]["float"]
-nb_bool_type = dtype_dict["nb"]["bool"]
-
 params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
 signature = nb_int_type(params_signature)
 
@@ -395,3 +406,52 @@ def get_conf_count(params):
     (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
     (backtest_params, backtest_result) = backtest_args
     return backtest_params.shape[0]
+
+
+params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
+signature = nb.void(params_signature)
+
+
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature,
+    cache_enabled=nb_params.get("cache", True),
+)
+def init_data(params):
+    (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
+    (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data) = data_args
+    (
+        indicator_params,
+        indicator_params2,
+        indicator_enabled,
+        indicator_enabled2,
+        indicator_result,
+        indicator_result2,
+    ) = indicator_args
+    (signal_params, signal_result) = signal_args
+    (backtest_params, backtest_result) = backtest_args
+    (
+        int_temp_array,
+        int_temp_array2,
+        float_temp_array,
+        float_temp_array2,
+        bool_temp_array,
+        bool_temp_array2,
+    ) = temp_args
+
+    tohlcv_smooth[:] = np.nan
+    tohlcv_smooth2[:] = np.nan
+
+    for i in indicator_result:
+        i[:] = np.nan
+    for i in indicator_result2:
+        i[:] = np.nan
+
+    signal_result[:] = False
+    backtest_result[:] = np.nan
+    int_temp_array[:] = 0
+    int_temp_array2[:] = 0
+    float_temp_array[:] = np.nan
+    float_temp_array2[:] = np.nan
+    bool_temp_array[:] = False
+    bool_temp_array2[:] = False

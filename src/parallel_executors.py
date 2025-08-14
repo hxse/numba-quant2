@@ -3,13 +3,12 @@ import numba as nb
 
 from src.core_logic import core_calc
 from utils.data_types import get_params_signature
-from utils.numba_unpack import unpack_params_child, get_conf_count
+from utils.numba_unpack import unpack_params_child, get_conf_count, init_data
 
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
-
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
@@ -39,6 +38,8 @@ if nb_params["mode"] in ["normal", "njit"]:
             indicator_result,
             indicator_result2,
         ) = indicator_args
+
+        init_data(params)
 
         conf_count = get_conf_count(params)
 
@@ -83,6 +84,8 @@ elif nb_params["mode"] == "cuda":
             indicator_result,
             indicator_result2,
         ) = indicator_args
+
+        init_data(params)
 
         conf_count = get_conf_count(params)
 

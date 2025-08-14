@@ -84,7 +84,7 @@ def main(
         df_data2, np_data2 = perpare_data(
             path2, data_size=data_size, dtype_dict=dtype_dict
         )
-        num = 200
+        num = 1
         params = get_params(
             num=num,
             indicator_update={
@@ -200,9 +200,7 @@ def main(
                 params["indicator_enabled2"],
                 write_csv=True,
             )
-            import pdb
 
-            pdb.set_trace()
         if total_time:
             print(f"Task {i} total_time: {time.time() - start_time:.4f} seconds")
 

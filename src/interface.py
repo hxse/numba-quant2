@@ -1,6 +1,7 @@
 import numpy as np
 import numba as nb
 from numba.cuda.cudadrv.devicearray import DeviceNDArray
+
 from src.parallel_executors import (
     parallel_calc,
     # parallel_calc_normal,
@@ -69,7 +70,9 @@ def entry_func(
     if mapping_data is None:
         mapping_data = np.zeros(tohlcv.shape[0], dtype=dtype_dict["np"]["int"])
 
+    # 在gpu模式下,outputs会直接生成为gpu数组,数组太大了,省略转换,直接生成空数组
     outputs = initialize_outputs(
+        mode,
         tohlcv,
         tohlcv2,
         indicator_params,
@@ -83,9 +86,7 @@ def entry_func(
         temp_bool_num=temp_bool_num,
         min_rows=min_rows,
     )
-
-    cpu_params = unpack_params(
-        outputs,
+    inputs = (
         tohlcv,
         tohlcv2,
         mapping_data,
@@ -97,39 +98,27 @@ def entry_func(
         backtest_params,
     )
 
-    if mode == "normal":
-        end_time = time.perf_counter()
-        print("数据生成时间:", end_time - start_time)
+    if mode == "cuda":
+        # inputs数组,在cuda模式下,会被转换成gpu,数组小,转换快
+        inputs = transform_data_recursive(inputs, mode="to_device")
+    params = unpack_params(outputs, inputs)
 
-        def _launch(params):
-            parallel_calc(params)
+    end_time = time.perf_counter()
+    print("数据生成时间:", end_time - start_time)
 
-        if core_time:
-            timed_launch_func = time_wrapper(_launch)
-            timed_launch_func(cpu_params)
-        else:
-            _launch(cpu_params)
+    if mode in ["normal", "njit"]:
 
-        return get_output(cpu_params)
-    elif mode == "njit":
-        end_time = time.perf_counter()
-        print("数据生成时间:", end_time - start_time)
-
-        def _launch(params):
-            parallel_calc(params)
+        def _launch(_p):
+            parallel_calc(_p)
 
         if core_time:
             timed_launch_func = time_wrapper(_launch)
-            timed_launch_func(cpu_params)
+            timed_launch_func(params)
         else:
-            _launch(cpu_params)
-        return get_output(cpu_params)
+            _launch(params)
+
+        return get_output(params)
     elif mode == "cuda":
-        gpu_params = transform_data_recursive(cpu_params, mode="to_device")
-
-        end_time = time.perf_counter()
-        print("数据生成时间:", end_time - start_time)
-
         if auto_tune_cuda_config:
             (threadsperblock, blockspergrid, max_registers) = auto_tune_cuda_parameters(
                 register_per_thread=nb_params.get("max_registers", 24),
@@ -142,17 +131,17 @@ def entry_func(
                 blockspergrid = 1
             max_registers = None  # 保持默认值或根据您的需求设置
 
-        def _launch(params):
-            parallel_calc[blockspergrid, threadsperblock](params)
+        def _launch(_p):
+            parallel_calc[blockspergrid, threadsperblock](_p)
             nb.cuda.synchronize()
 
         if core_time:
             timed_launch_func = time_wrapper(_launch)
-            timed_launch_func(gpu_params)
+            timed_launch_func(params)
         else:
-            _launch(gpu_params)
+            _launch(params)
 
-        return transform_data_recursive(get_output(gpu_params), mode="to_host")
+        return transform_data_recursive(get_output(params), mode="to_host")
     else:
         raise ValueError(f"Invalid mode: {mode}")
 
