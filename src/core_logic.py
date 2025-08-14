@@ -7,6 +7,8 @@ from .backtest.calculate_backtest import calc_backtest
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
+from utils.numba_init_data import init_data_child
+
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
@@ -26,6 +28,7 @@ signature = nb.void(params_child_signature)
     cache_enabled=nb_params.get("cache", True),
 )
 def core_calc(params_child):
+    init_data_child(params_child)
     calc_indicators(params_child)
     calc_signal(params_child)
     calc_backtest(params_child)

@@ -85,7 +85,10 @@ def entry_func(
         outputs = get_outputs_from_global(lookup_dict)
     else:
         outputs = None
-    if not outputs:
+
+    if outputs:
+        print("已复用上一次的结果数组,避免重复初始化开销")
+    else:
         # 在gpu模式下,outputs会直接生成为gpu数组,数组太大了,省略转换,直接生成空数组
         outputs = initialize_outputs(
             mode,
@@ -159,7 +162,14 @@ def entry_func(
         else:
             _launch(params)
 
-        return transform_data_recursive(get_output(params), mode="to_host")
+        start_time = time.perf_counter()
+        print("开始把数据从gpu提取到cpu")
+
+        cpu_params = transform_data_recursive(get_output(params), mode="to_host")
+
+        end_time = time.perf_counter()
+        print("数据 gpu -> cpu:", end_time - start_time)
+        return cpu_params
     else:
         raise ValueError(f"Invalid mode: {mode}")
 

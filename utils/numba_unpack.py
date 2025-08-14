@@ -1,12 +1,10 @@
 import numpy as np
 import numba as nb
 from utils.numba_utils import nb_wrapper
-from utils.data_types import (
-    get_params_signature,
-    get_params_child_signature,
-)
+from utils.data_types import get_params_signature, get_params_child_signature
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
+
 
 from src.indicators.sma import sma_spec, sma2_spec
 from src.indicators.bbands import bbands_spec
@@ -408,52 +406,3 @@ def get_conf_count(params):
     (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
     (backtest_params, backtest_result) = backtest_args
     return backtest_params.shape[0]
-
-
-params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)
-signature = nb.void(params_signature)
-
-
-@nb_wrapper(
-    mode=nb_params["mode"],
-    signature=signature,
-    cache_enabled=nb_params.get("cache", True),
-)
-def init_data(params):
-    (data_args, indicator_args, signal_args, backtest_args, temp_args) = params
-    (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data) = data_args
-    (
-        indicator_params,
-        indicator_params2,
-        indicator_enabled,
-        indicator_enabled2,
-        indicator_result,
-        indicator_result2,
-    ) = indicator_args
-    (signal_params, signal_result) = signal_args
-    (backtest_params, backtest_result) = backtest_args
-    (
-        int_temp_array,
-        int_temp_array2,
-        float_temp_array,
-        float_temp_array2,
-        bool_temp_array,
-        bool_temp_array2,
-    ) = temp_args
-
-    tohlcv_smooth[:] = np.nan
-    tohlcv_smooth2[:] = np.nan
-
-    for i in indicator_result:
-        i[:] = np.nan
-    for i in indicator_result2:
-        i[:] = np.nan
-
-    signal_result[:] = False
-    backtest_result[:] = np.nan
-    int_temp_array[:] = 0
-    int_temp_array2[:] = 0
-    float_temp_array[:] = np.nan
-    float_temp_array2[:] = np.nan
-    bool_temp_array[:] = False
-    bool_temp_array2[:] = False

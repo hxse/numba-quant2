@@ -23,7 +23,7 @@ def main(
     task_time: bool = True,
     total_time: bool = False,
     max_registers: int = 24,
-    max_size=1,
+    max_size: int = 1,
 ):
     """
     pre_run 控制是否执行第一次迭代 (预运行)
