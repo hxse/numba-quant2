@@ -28,18 +28,6 @@ def get_indicator_params(nb_int_type, nb_float_type, nb_bool_type):
     )
 
 
-def get_indicator_result(nb_int_type, nb_float_type, nb_bool_type):
-    return nb.types.Tuple(
-        (
-            nb_float_type[:, :, :],  # sma_result
-            nb_float_type[:, :, :],  # sma2_result
-            nb_float_type[:, :, :],  # bbands_result
-            nb_float_type[:, :, :],  # atr_result
-            nb_float_type[:, :, :],  # psar_result
-        )
-    )
-
-
 def get_indicator_params_child(nb_int_type, nb_float_type, nb_bool_type):
     return nb.types.Tuple(
         (
@@ -52,6 +40,18 @@ def get_indicator_params_child(nb_int_type, nb_float_type, nb_bool_type):
     )
 
 
+def get_indicator_result(nb_int_type, nb_float_type, nb_bool_type):
+    return nb.types.Tuple(
+        (
+            nb_float_type[:, :, :],  # sma_result
+            nb_float_type[:, :, :],  # sma2_result
+            nb_float_type[:, :, :],  # bbands_result
+            nb_float_type[:, :, :],  # atr_result
+            nb_float_type[:, :, :],  # psar_result
+        )
+    )
+
+
 def get_indicator_result_child(nb_int_type, nb_float_type, nb_bool_type):
     return nb.types.Tuple(
         (
@@ -60,6 +60,32 @@ def get_indicator_result_child(nb_int_type, nb_float_type, nb_bool_type):
             nb_float_type[:, :],  # bbands_result_child
             nb_float_type[:, :],  # atr_result_child
             nb_float_type[:, :],  # psar_result_child
+        )
+    )
+
+
+def get_temp_result(nb_int_type, nb_float_type, nb_bool_type):
+    return nb.types.Tuple(
+        (
+            nb_int_type[:, :, :],  # int_temp_array
+            nb_int_type[:, :, :],  # int_temp_array2
+            nb_float_type[:, :, :],  # float_temp_array
+            nb_float_type[:, :, :],  # float_temp_array2
+            nb_bool_type[:, :, :],  # bool_temp_array
+            nb_bool_type[:, :, :],  # bool_temp_array2
+        )
+    )
+
+
+def get_temp_result_child(nb_int_type, nb_float_type, nb_bool_type):
+    return nb.types.Tuple(
+        (
+            nb_int_type[:, :],  # int_temp_array_child
+            nb_int_type[:, :],  # int_temp_array2_child
+            nb_float_type[:, :],  # float_temp_array_child
+            nb_float_type[:, :],  # float_temp_array2_child
+            nb_bool_type[:, :],  # bool_temp_array_child
+            nb_bool_type[:, :],  # bool_temp_array2_child
         )
     )
 
@@ -104,9 +130,7 @@ def get_params_signature(nb_int_type, nb_float_type, nb_bool_type):
             ),
             nb.types.Tuple(
                 (  # temp_args
-                    nb_int_type[:, :, :],  # int_temp_array
-                    nb_float_type[:, :, :],  # float_temp_array
-                    nb_bool_type[:, :, :],  # bool_temp_array
+                    get_temp_result(nb_int_type, nb_float_type, nb_bool_type)
                 )
             ),
         )
@@ -161,9 +185,7 @@ def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
             ),
             nb.types.Tuple(
                 (  # temp_args
-                    nb_int_type[:, :],  # int_temp_array_child
-                    nb_float_type[:, :],  # float_temp_array_child
-                    nb_bool_type[:, :],  # bool_temp_array_child
+                    get_temp_result_child(nb_int_type, nb_float_type, nb_bool_type)
                 )
             ),
         )

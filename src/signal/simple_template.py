@@ -1,6 +1,9 @@
 import numba as nb
 import numpy as np
-from utils.data_types import get_indicator_params_child, get_indicator_result_child
+from utils.data_types import (
+    get_indicator_result_child,
+    get_temp_result_child,
+)
 
 from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
 from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
@@ -46,21 +49,11 @@ simple_dependency2 = simple_spec["dependency2"]
 signature = nb.void(
     nb_float_type[:, :],  # tohlcv
     nb_float_type[:, :],  # tohlcv2
-    get_indicator_result_child(
-        nb_int_type, nb_float_type, nb_bool_type
-    ),  # indicator_result_child
-    get_indicator_result_child(
-        nb_int_type, nb_float_type, nb_bool_type
-    ),  # indicator_result2_child
+    get_indicator_result_child(nb_int_type, nb_float_type, nb_bool_type),
+    get_indicator_result_child(nb_int_type, nb_float_type, nb_bool_type),
     nb_int_type[:],  # signal_params
     nb_bool_type[:, :],  # signal_result_child
-    nb.types.Tuple(
-        (
-            nb_int_type[:, :],  # int_temp_array_child
-            nb_float_type[:, :],  # float_temp_array_child
-            nb_bool_type[:, :],  # bool_temp_array_child
-        )
-    ),
+    get_temp_result_child(nb_int_type, nb_float_type, nb_bool_type),
 )
 
 
@@ -78,9 +71,16 @@ def simple_signal(
     signal_result_child,
     temp_args,
 ):
-    (int_temp_array, float_temp_array, bool_temp_array) = temp_args
+    (
+        int_temp_array_child,
+        int_temp_array2_child,
+        float_temp_array_child,
+        float_temp_array2_child,
+        bool_temp_array_child,
+        bool_temp_array2_child,
+    ) = temp_args
 
-    temp_array = bool_temp_array[:, 0]
+    temp_array = bool_temp_array_child[:, 0]
 
     close = tohlcv[:, 4]
 

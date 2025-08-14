@@ -156,6 +156,26 @@ def initialize_outputs(
         (conf_count, tohlcv_rows, temp_bool_num), 0, dtype=np_bool_type
     )
 
+    # --- Temporary Arrays ---
+    int_temp_array2 = np.full(
+        (conf_count, tohlcv2_rows, temp_int_num), 0, dtype=np_int_type
+    )
+    float_temp_array2 = np.full(
+        (conf_count, tohlcv2_rows, temp_float_num), 0, dtype=np_float_type
+    )
+    bool_temp_array2 = np.full(
+        (conf_count, tohlcv2_rows, temp_bool_num), 0, dtype=np_bool_type
+    )
+
+    temp_args = (
+        int_temp_array,
+        int_temp_array2,
+        float_temp_array,
+        float_temp_array2,
+        bool_temp_array,
+        bool_temp_array2,
+    )
+
     return (
         tohlcv_smooth,
         tohlcv_smooth2,
@@ -163,9 +183,7 @@ def initialize_outputs(
         indicator_result2,
         signal_result,
         backtest_result,
-        int_temp_array,
-        float_temp_array,
-        bool_temp_array,
+        temp_args,
     )
 
 
@@ -188,9 +206,7 @@ def unpack_params(
         indicator_result2,
         signal_result,
         backtest_result,
-        int_temp_array,
-        float_temp_array,
-        bool_temp_array,
+        temp_args,
     ) = outputs
 
     data_args = (tohlcv, tohlcv2, tohlcv_smooth, tohlcv_smooth2, mapping_data)
@@ -204,7 +220,6 @@ def unpack_params(
     )
     signal_args = (signal_params, signal_result)
     backtest_args = (backtest_params, backtest_result)
-    temp_args = (int_temp_array, float_temp_array, bool_temp_array)
 
     cpu_params = (data_args, indicator_args, signal_args, backtest_args, temp_args)
     return cpu_params
@@ -243,7 +258,14 @@ def unpack_params_child(params, idx):
     ) = indicator_args
     (signal_params, signal_result) = signal_args
     (backtest_params, backtest_result) = backtest_args
-    (int_temp_array, float_temp_array, bool_temp_array) = temp_args
+    (
+        int_temp_array,
+        int_temp_array2,
+        float_temp_array,
+        float_temp_array2,
+        bool_temp_array,
+        bool_temp_array2,
+    ) = temp_args
 
     (sma_params, sma2_params, bbands_params, atr_params, psar_params) = indicator_params
     (sma_params2, sma2_params2, bbands_params2, atr_params2, psar_params2) = (
@@ -298,8 +320,11 @@ def unpack_params_child(params, idx):
 
     temp_args_child = (
         int_temp_array[idx],
+        int_temp_array2[idx],
         float_temp_array[idx],
+        float_temp_array2[idx],
         bool_temp_array[idx],
+        bool_temp_array2[idx],
     )
 
     params_child = (
@@ -326,7 +351,14 @@ def get_output(params):
     ) = indicator_args
     (signal_params, signal_result) = signal_args
     (backtest_params, backtest_result) = backtest_args
-    (int_temp_array, float_temp_array, bool_temp_array) = temp_args
+    (
+        int_temp_array,
+        int_temp_array2,
+        float_temp_array,
+        float_temp_array2,
+        bool_temp_array,
+        bool_temp_array2,
+    ) = temp_args
 
     return (
         tohlcv,
@@ -337,8 +369,11 @@ def get_output(params):
         signal_result,
         backtest_result,
         int_temp_array,
+        int_temp_array2,
         float_temp_array,
+        float_temp_array2,
         bool_temp_array,
+        bool_temp_array2,
     )
 
 

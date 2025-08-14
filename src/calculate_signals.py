@@ -49,7 +49,14 @@ def calc_signal(params_child):
     ) = indicator_args
     (signal_params, signal_result_child) = signal_args
     (backtest_params_child, backtest_result_child) = backtest_args
-    (int_temp_array_child, float_temp_array_child, bool_temp_array_child) = temp_args
+    (
+        int_temp_array_child,
+        int_temp_array2_child,
+        float_temp_array_child,
+        float_temp_array2_child,
+        bool_temp_array_child,
+        bool_temp_array2_child,
+    ) = temp_args
 
     id_array = (simple_id,)
     func_array = (simple_signal,)

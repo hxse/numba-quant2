@@ -78,7 +78,14 @@ def calc_indicators(params_child):
     ) = indicator_args
     (signal_params, signal_result_child) = signal_args
     (backtest_params_child, backtest_result_child) = backtest_args
-    (int_temp_array_child, float_temp_array_child, bool_temp_array_child) = temp_args
+    (
+        int_temp_array_child,
+        int_temp_array2_child,
+        float_temp_array_child,
+        float_temp_array2_child,
+        bool_temp_array_child,
+        bool_temp_array2_child,
+    ) = temp_args
 
     id_arr = (sma_id, sma2_id, bbands_id, atr_id, psar_id)
 
@@ -97,6 +104,6 @@ def calc_indicators(params_child):
                 tohlcv2,
                 indicator_params2_child,
                 indicator_result2_child,
-                float_temp_array_child,
+                float_temp_array2_child,
                 id_arr[i],
             )
