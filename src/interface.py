@@ -15,6 +15,7 @@ from utils.numba_unpack import unpack_params, get_output, initialize_outputs
 from utils.data_loading import transform_data_recursive
 
 from utils.numba_params import nb_params
+from utils.outputs_global import get_outputs_from_global, set_outputs_from_global
 
 import time
 
@@ -32,14 +33,15 @@ def entry_func(
     indicator_params2=None,
     indicator_enabled2=None,
     mapping_data=None,
-    cache=False,
     dtype_dict=default_dtype_dict,
-    min_rows=0,  # 最小填充数组行数
     temp_int_num=1,
     temp_float_num=4,
     temp_bool_num=4,
+    min_rows=0,  # 最小填充数组行数
     core_time=False,
     auto_tune_cuda_config=True,
+    reuse_outputs=True,
+    max_size=1,
 ):
     """
     目前的设计来说,同一波并发,可以变的参数如下
@@ -70,22 +72,38 @@ def entry_func(
     if mapping_data is None:
         mapping_data = np.zeros(tohlcv.shape[0], dtype=dtype_dict["np"]["int"])
 
-    # 在gpu模式下,outputs会直接生成为gpu数组,数组太大了,省略转换,直接生成空数组
-    outputs = initialize_outputs(
-        mode,
-        tohlcv,
-        tohlcv2,
-        indicator_params,
-        indicator_params2,
-        indicator_enabled,
-        indicator_enabled2,
-        _conf_count,
-        dtype_dict,
-        temp_int_num=temp_int_num,
-        temp_float_num=temp_float_num,
-        temp_bool_num=temp_bool_num,
-        min_rows=min_rows,
-    )
+    if reuse_outputs and max_size > 0:
+        lookup_dict = {
+            "_conf_count": _conf_count,
+            "tohlcv_shape": tohlcv.shape,
+            "tohlcv2_shape": tohlcv2.shape,
+            "temp_int_num": temp_int_num,
+            "temp_float_num": temp_float_num,
+            "temp_bool_num": temp_bool_num,
+            "min_rows": min_rows,
+        }
+        outputs = get_outputs_from_global(lookup_dict)
+    else:
+        outputs = None
+    if not outputs:
+        # 在gpu模式下,outputs会直接生成为gpu数组,数组太大了,省略转换,直接生成空数组
+        outputs = initialize_outputs(
+            mode,
+            tohlcv,
+            tohlcv2,
+            indicator_params,
+            indicator_params2,
+            indicator_enabled,
+            indicator_enabled2,
+            _conf_count,
+            dtype_dict,
+            temp_int_num=temp_int_num,
+            temp_float_num=temp_float_num,
+            temp_bool_num=temp_bool_num,
+            min_rows=min_rows,
+        )
+        set_outputs_from_global(lookup_dict, outputs, max_size=max_size)
+
     inputs = (
         tohlcv,
         tohlcv2,

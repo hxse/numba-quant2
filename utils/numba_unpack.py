@@ -95,8 +95,10 @@ def initialize_outputs(
     tohlcv_rows = tohlcv_shape[0]
     tohlcv2_rows = tohlcv2_shape[0]
 
-    tohlcv_smooth = create_array(mode, tohlcv_shape, np_float_type)
-    tohlcv_smooth2 = create_array(mode, tohlcv2_shape, np_float_type)
+    tohlcv_smooth_shape = tohlcv_shape
+    tohlcv_smooth2_shape = tohlcv2_shape
+    tohlcv_smooth = create_array(mode, tohlcv_smooth_shape, np_float_type)
+    tohlcv_smooth2 = create_array(mode, tohlcv_smooth2_shape, np_float_type)
 
     # --- Indicator Result Arrays ---
     signal_output_dim = signal_result_count

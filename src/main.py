@@ -23,6 +23,7 @@ def main(
     task_time: bool = True,
     total_time: bool = False,
     max_registers: int = 24,
+    max_size=1,
 ):
     """
     pre_run 控制是否执行第一次迭代 (预运行)
@@ -177,9 +178,9 @@ def main(
             indicator_params2=params["indicator_params2"],
             indicator_enabled2=params["indicator_enabled2"],
             mapping_data=params["mapping_data"],
-            cache=cache,
             dtype_dict=dtype_dict,
             core_time=core_time,
+            max_size=max_size,
         )
 
         if i != 0:
