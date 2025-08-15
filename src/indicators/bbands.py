@@ -3,7 +3,7 @@ import numpy as np
 from utils.data_types import (
     get_indicator_params_child,
     get_indicator_result_child,
-    get_indicator_wrapper_signal,
+    loop_indicators_signature,
 )
 from .indicators_tool import check_bounds
 
@@ -80,7 +80,7 @@ def calculate_bbands(
 
 
 signature = nb.void(
-    *get_indicator_wrapper_signal(nb_int_type, nb_float_type, nb_bool_type)
+    *loop_indicators_signature(nb_int_type, nb_float_type, nb_bool_type)
 )
 
 
@@ -90,7 +90,7 @@ signature = nb.void(
     cache_enabled=nb_params.get("cache", True),
 )
 def calculate_bbands_wrapper(
-    tohlcv, indicator_params_child, indicator_result_child, float_temp_array_child, _id
+    _id, tohlcv, indicator_params_child, indicator_result_child, float_temp_array_child
 ):
     time = tohlcv[:, 0]
     open = tohlcv[:, 1]

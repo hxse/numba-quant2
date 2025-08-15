@@ -192,8 +192,9 @@ def get_params_child_signature(nb_int_type, nb_float_type, nb_bool_type):
     )
 
 
-def get_indicator_wrapper_signal(nb_int_type, nb_float_type, nb_bool_type):
+def loop_indicators_signature(nb_int_type, nb_float_type, nb_bool_type):
     return (
+        nb_int_type,  # _id
         nb_float_type[:, :],  # tohlcv
         get_indicator_params_child(
             nb_int_type, nb_float_type, nb_bool_type
@@ -202,5 +203,21 @@ def get_indicator_wrapper_signal(nb_int_type, nb_float_type, nb_bool_type):
             nb_int_type, nb_float_type, nb_bool_type
         ),  # indicator_result_child
         nb_float_type[:, :],  # float_temp_array_child
-        nb_int_type,  # _id
+    )
+
+
+def loop_signals_signature(nb_int_type, nb_float_type, nb_bool_type):
+    return (
+        nb_int_type,  # signal_id
+        nb_float_type[:, :],  # tohlcv
+        nb_float_type[:, :],  # tohlcv2
+        get_indicator_result_child(
+            nb_int_type, nb_float_type, nb_bool_type
+        ),  # indicator_result_child
+        get_indicator_result_child(
+            nb_int_type, nb_float_type, nb_bool_type
+        ),  # indicator_result_child2
+        nb_int_type[:],  # signal_params
+        nb_bool_type[:, :],  # signal_result_child
+        get_temp_result_child(nb_int_type, nb_float_type, nb_bool_type),  # temp_args
     )

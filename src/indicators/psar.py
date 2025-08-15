@@ -5,7 +5,7 @@ import math
 from utils.data_types import (
     get_indicator_params_child,
     get_indicator_result_child,
-    get_indicator_wrapper_signal,
+    loop_indicators_signature,
 )
 from .indicators_tool import check_bounds
 
@@ -402,7 +402,7 @@ def calculate_psar(
 
 # --- calculate_psar_wrapper ---
 signature_wrapper = nb.void(
-    *get_indicator_wrapper_signal(nb_int_type, nb_float_type, nb_bool_type)
+    *loop_indicators_signature(nb_int_type, nb_float_type, nb_bool_type)
 )
 
 
@@ -412,7 +412,7 @@ signature_wrapper = nb.void(
     cache_enabled=nb_params.get("cache", True),
 )
 def calculate_psar_wrapper(
-    tohlcv, indicator_params_child, indicator_result_child, float_temp_array_child, _id
+    _id, tohlcv, indicator_params_child, indicator_result_child, float_temp_array_child
 ):
     high = tohlcv[:, 2]
     low = tohlcv[:, 3]

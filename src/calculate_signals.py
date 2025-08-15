@@ -10,6 +10,8 @@ from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
 from utils.numba_utils import nb_wrapper
 
+from utils.data_types import loop_signals_signature
+
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
 nb_float_type = dtype_dict["nb"]["float"]
@@ -23,6 +25,36 @@ signal_result_name = [
     "exit_short",
 ]
 signal_result_count = len(signal_result_name)
+
+
+signature = nb.void(*loop_signals_signature(nb_int_type, nb_float_type, nb_bool_type))
+
+
+@nb_wrapper(
+    mode=nb_params["mode"],
+    signature=signature,
+    cache_enabled=nb_params.get("cache", True),
+)
+def loop_signals(
+    signal_id,
+    tohlcv,
+    tohlcv2,
+    indicator_result_child,
+    indicator_result2_child,
+    signal_params,
+    signal_result_child,
+    temp_args,
+):
+    if signal_id == simple_id:
+        simple_signal(
+            tohlcv,
+            tohlcv2,
+            indicator_result_child,
+            indicator_result2_child,
+            signal_params,
+            signal_result_child,
+            temp_args,
+        )
 
 
 params_child_signature = get_params_child_signature(
@@ -58,20 +90,16 @@ def calc_signal(params_child):
         bool_temp_array2_child,
     ) = temp_args
 
-    id_array = (simple_id,)
-    func_array = (simple_signal,)
-
-    for i in range(len(id_array)):
-        if len(signal_params) > 0:
-            if signal_params[0] == id_array[i]:
-                func_array[i](
-                    tohlcv,
-                    tohlcv2,
-                    indicator_result_child,
-                    indicator_result2_child,
-                    signal_params,
-                    signal_result_child,
-                    temp_args,
-                )
+    signal_id = signal_params[0]
+    loop_signals(
+        signal_id,
+        tohlcv,
+        tohlcv2,
+        indicator_result_child,
+        indicator_result2_child,
+        signal_params,
+        signal_result_child,
+        temp_args,
+    )
 
     clean_signal(signal_result_child)
