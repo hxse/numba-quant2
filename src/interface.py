@@ -72,19 +72,18 @@ def entry_func(
     if mapping_data is None:
         mapping_data = np.zeros(tohlcv.shape[0], dtype=dtype_dict["np"]["int"])
 
+    lookup_dict = {
+        "_conf_count": _conf_count,
+        "tohlcv_shape": tohlcv.shape,
+        "tohlcv2_shape": tohlcv2.shape,
+        "temp_int_num": temp_int_num,
+        "temp_float_num": temp_float_num,
+        "temp_bool_num": temp_bool_num,
+        "min_rows": min_rows,
+    }
+    outputs = None
     if reuse_outputs and max_size > 0:
-        lookup_dict = {
-            "_conf_count": _conf_count,
-            "tohlcv_shape": tohlcv.shape,
-            "tohlcv2_shape": tohlcv2.shape,
-            "temp_int_num": temp_int_num,
-            "temp_float_num": temp_float_num,
-            "temp_bool_num": temp_bool_num,
-            "min_rows": min_rows,
-        }
         outputs = get_outputs_from_global(lookup_dict)
-    else:
-        outputs = None
 
     if outputs:
         print("已复用上一次的结果数组,避免重复初始化开销")
@@ -105,6 +104,8 @@ def entry_func(
             temp_bool_num=temp_bool_num,
             min_rows=min_rows,
         )
+
+    if reuse_outputs and max_size > 0 and outputs:
         set_outputs_from_global(lookup_dict, outputs, max_size=max_size)
 
     inputs = (

@@ -1,12 +1,12 @@
 import numba as nb
 import numpy as np
+
+from src.indicators.indicators_wrapper import IndicatorsId
 from utils.data_types import (
     get_indicator_result_child,
     get_temp_result_child,
 )
 
-from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
-from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
 
 from .signal_tool import (
     bool_compare,
@@ -29,8 +29,8 @@ nb_bool_type = dtype_dict["nb"]["bool"]
 simple_spec = {
     "id": 0,
     "name": "simple",
-    "dependency": {sma_name: True, sma2_name: True},
-    "dependency2": {sma_name: True, sma2_name: True},
+    "dependency": {"sma": True, "sma2": True},
+    "dependency2": {"sma": True, "sma2": True},
     "exit_control": {
         "pct_sl_enable": True,
         "pct_tp_enable": False,
@@ -84,16 +84,16 @@ def simple_signal(
 
     close = tohlcv[:, 4]
 
-    sma_indicator_result_child = indicator_result_child[sma_id]
+    sma_indicator_result_child = indicator_result_child[IndicatorsId.sma.value]
     sma_result = sma_indicator_result_child[:, 0]
 
-    sma2_indicator_result_child = indicator_result_child[sma2_id]
+    sma2_indicator_result_child = indicator_result_child[IndicatorsId.sma2.value]
     sma2_result = sma2_indicator_result_child[:, 0]
 
-    sma_indicator_result2_child = indicator_result2_child[sma_id]
+    sma_indicator_result2_child = indicator_result2_child[IndicatorsId.sma.value]
     sma_result2 = sma_indicator_result2_child[:, 0]
 
-    sma2_indicator_result2_child = indicator_result2_child[sma2_id]
+    sma2_indicator_result2_child = indicator_result2_child[IndicatorsId.sma2.value]
     sma2_result2 = sma2_indicator_result2_child[:, 0]
 
     enter_long_signal = signal_result_child[:, 0]

@@ -1,28 +1,12 @@
 import numba as nb
 import numpy as np
+from utils.numba_utils import nb_wrapper
 
-
-# from enum import Enum
-
-
-# rma_id = 4
-# rma_name = "rma"
-
-# rma_spec = {
-#     "id": rma_id,
-#     "name": rma_name,
-#     "ori_name": rma_name,
-#     "result_name": ["rma"],
-#     "default_params": [14],
-#     "param_count": 1,
-#     "result_count": 1,
-#     "temp_count": 0,
-# }
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
-from utils.numba_utils import nb_wrapper
 from .indicators_tool import check_bounds
+
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]

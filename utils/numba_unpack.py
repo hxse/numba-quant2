@@ -1,18 +1,17 @@
 import numpy as np
 import numba as nb
 from utils.numba_utils import nb_wrapper
-from utils.data_types import get_params_signature, get_params_child_signature
-from utils.numba_params import nb_params
-from utils.data_types import get_numba_data_types
-
-
-from src.indicators.sma import sma_spec, sma2_spec
-from src.indicators.bbands import bbands_spec
-from src.indicators.atr import atr_id, atr_name, atr_spec
-from src.indicators.psar import psar_id, psar_name, psar_spec
-from src.backtest.calculate_backtest import backtest_result_count
+from utils.data_types import (
+    get_params_signature,
+    get_params_child_signature,
+    get_numba_data_types,
+)
+from src.indicators.indicators_wrapper import indicators_spec
 from src.calculate_signals import signal_result_count
+from src.backtest.calculate_backtest import backtest_result_count
 
+
+from utils.numba_params import nb_params
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
 nb_int_type = dtype_dict["nb"]["int"]
@@ -49,6 +48,55 @@ def create_array(
         return d_array
     else:
         raise ValueError(f"Invalid mode: {mode}")
+
+
+def get_max_temp_float_num(indicators_spec: dict, min_temp_float_num: int) -> int:
+    """
+    计算所有指标中最大的临时浮点数数量。
+    """
+    if not indicators_spec:
+        # 如果字典为空，则返回最小值
+        return min_temp_float_num
+
+    max_from_specs = max(spec.get("temp_count", 0) for spec in indicators_spec.values())
+
+    # 确保返回结果不小于设定的最小值
+    return max(max_from_specs, min_temp_float_num)
+
+
+def create_indicator_results(
+    mode,
+    indicators_spec: dict,
+    indicator_enabled: np.ndarray,
+    tohlcv_rows: int,
+    min_rows: int,
+    conf_count: int,
+    dtype_dict: dict,
+):
+    """
+    根据指标规格动态创建指标结果数组。
+    """
+
+    np_int_type = dtype_dict["np"]["int"]
+    np_float_type = dtype_dict["np"]["float"]
+    np_bool_type = dtype_dict["np"]["bool"]
+
+    # 动态创建指标结果数组
+    indicator_results = []
+    for spec in indicators_spec.values():
+        indicator_id = spec["id"]
+        output_dim = spec["result_count"]
+
+        # 根据指标是否启用确定行数
+        rows = tohlcv_rows if indicator_enabled[indicator_id] else min_rows
+
+        # 定义数组形状并创建数组
+        shape = (conf_count, rows, output_dim)
+        result_array = create_array(mode, shape, np_float_type)
+
+        indicator_results.append(result_array)
+
+    return tuple(indicator_results)
 
 
 def initialize_outputs(
@@ -98,67 +146,30 @@ def initialize_outputs(
     tohlcv_smooth = create_array(mode, tohlcv_smooth_shape, np_float_type)
     tohlcv_smooth2 = create_array(mode, tohlcv_smooth2_shape, np_float_type)
 
-    # --- Indicator Result Arrays ---
     signal_output_dim = signal_result_count
     backtest_output_dim = backtest_result_count
-    temp_float_num = max(
-        temp_float_num,
-        sma_spec["temp_count"] + sma2_spec["temp_count"] + bbands_spec["temp_count"],
+
+    temp_float_num = get_max_temp_float_num(indicators_spec, temp_float_num)
+
+    # --- Indicator Result Arrays ---
+    indicator_result = create_indicator_results(
+        mode,
+        indicators_spec,
+        indicator_enabled,
+        tohlcv_rows,
+        min_rows,
+        conf_count,
+        dtype_dict,
     )
 
-    sma_output_dim = sma_spec["result_count"]
-    sma_rows = tohlcv_rows if indicator_enabled[sma_spec["id"]] else min_rows
-    sma_shape = (conf_count, sma_rows, sma_output_dim)
-    sma_result = create_array(mode, sma_shape, np_float_type)
-
-    sma2_output_dim = sma2_spec["result_count"]
-    sma2_rows = tohlcv_rows if indicator_enabled[sma2_spec["id"]] else min_rows
-    sma2_shape = (conf_count, sma2_rows, sma2_output_dim)
-    sma2_result = create_array(mode, sma2_shape, np_float_type)
-
-    bbands_output_dim = bbands_spec["result_count"]
-    bbands_rows = tohlcv_rows if indicator_enabled[bbands_spec["id"]] else min_rows
-    bbands_shape = (conf_count, bbands_rows, bbands_output_dim)
-    bbands_result = create_array(mode, bbands_shape, np_float_type)
-
-    atr_output_dim = atr_spec["result_count"]
-    atr_rows = tohlcv_rows if indicator_enabled[atr_spec["id"]] else min_rows
-    atr_shape = (conf_count, atr_rows, atr_output_dim)
-    atr_result = create_array(mode, atr_shape, np_float_type)
-
-    psar_output_dim = psar_spec["result_count"]
-    psar_rows = tohlcv_rows if indicator_enabled[psar_spec["id"]] else min_rows
-    psar_shape = (conf_count, psar_rows, psar_output_dim)
-    psar_result = create_array(mode, psar_shape, np_float_type)
-
-    indicator_result = (sma_result, sma2_result, bbands_result, atr_result, psar_result)
-
-    sma_rows2 = tohlcv2_rows if indicator_enabled2[sma_spec["id"]] else min_rows
-    sma_shape2 = (conf_count, sma_rows2, sma_output_dim)
-    sma_result2 = create_array(mode, sma_shape2, np_float_type)
-
-    sma2_rows2 = tohlcv2_rows if indicator_enabled2[sma2_spec["id"]] else min_rows
-    sma2_shape2 = (conf_count, sma2_rows2, sma_output_dim)
-    sma2_result2 = create_array(mode, sma2_shape2, np_float_type)
-
-    bbands_rows2 = tohlcv2_rows if indicator_enabled2[bbands_spec["id"]] else min_rows
-    bbands_shape2 = (conf_count, bbands_rows2, bbands_output_dim)
-    bbands_result2 = create_array(mode, bbands_shape2, np_float_type)
-
-    atr_rows2 = tohlcv2_rows if indicator_enabled2[atr_spec["id"]] else min_rows
-    atr_shape2 = (conf_count, atr_rows2, atr_output_dim)
-    atr_result2 = create_array(mode, atr_shape2, np_float_type)
-
-    psar_rows2 = tohlcv2_rows if indicator_enabled2[psar_spec["id"]] else min_rows
-    psar_shape2 = (conf_count, psar_rows2, psar_output_dim)
-    psar_result2 = create_array(mode, psar_shape2, np_float_type)
-
-    indicator_result2 = (
-        sma_result2,
-        sma2_result2,
-        bbands_result2,
-        atr_result2,
-        psar_result2,
+    indicator_result2 = create_indicator_results(
+        mode,
+        indicators_spec,
+        indicator_enabled2,
+        tohlcv2_rows,
+        min_rows,
+        conf_count,
+        dtype_dict,
     )
 
     # --- Signal Result Arrays ---
@@ -376,21 +387,21 @@ def get_output(params):
         bool_temp_array2,
     ) = temp_args
 
-    return (
-        tohlcv,
-        tohlcv2,
-        mapping_data,
-        indicator_result,
-        indicator_result2,
-        signal_result,
-        backtest_result,
-        int_temp_array,
-        int_temp_array2,
-        float_temp_array,
-        float_temp_array2,
-        bool_temp_array,
-        bool_temp_array2,
-    )
+    return {
+        "tohlcv": tohlcv,
+        "tohlcv2": tohlcv2,
+        "mapping_data": mapping_data,
+        "indicator_result": indicator_result,
+        "indicator_result2": indicator_result2,
+        "signal_result": signal_result,
+        "backtest_result": backtest_result,
+        "int_temp_array": int_temp_array,
+        "int_temp_array2": int_temp_array2,
+        "float_temp_array": float_temp_array,
+        "float_temp_array2": float_temp_array2,
+        "bool_temp_array": bool_temp_array,
+        "bool_temp_array2": bool_temp_array2,
+    }
 
 
 params_signature = get_params_signature(nb_int_type, nb_float_type, nb_bool_type)

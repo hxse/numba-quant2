@@ -2,46 +2,21 @@ from utils.data_loading import load_tohlcv_from_csv, convert_tohlcv_numpy
 from utils.data_types import get_numba_data_types
 import numpy as np
 
+from src.indicators.indicators_wrapper import (
+    IndicatorsId,
+    indicators_id_array,
+    indicators_spec,
+)
+from src.backtest.calculate_backtest import default_backtest_params
 
-from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
-from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
-from src.indicators.atr import atr_id, atr_name, atr_spec
-from src.indicators.psar import psar_id, psar_name, psar_spec
 from src.signal.simple_template import simple_name, simple_spec
 
-indicator_count = psar_id + 1  # 最大的指标id值+1
-
-default_indicators_template = {
-    sma_name: sma_spec,
-    sma2_name: sma2_spec,
-    bbands_name: bbands_spec,
-    atr_name: atr_spec,
-    psar_name: psar_spec,
-}
+indicator_count = len(indicators_id_array)  # 最大的指标id值+1
 
 default_signal_template = {
     simple_name: simple_spec,
 }
-
-default_backtest_template = {
-    "pct_sl_enable": False,
-    "pct_tp_enable": False,
-    "pct_tsl_enable": False,
-    "pct_sl": 0.02,
-    "pct_tp": 0.02,
-    "pct_tsl": 0.02,
-    "atr_sl_enable": True,
-    "atr_tp_enable": True,
-    "atr_tsl_enable": True,
-    "atr_preiod": 14,
-    "atr_sl_multiplier": 2.0,
-    "atr_tp_multiplier": 2.0,
-    "atr_tsl_multiplier": 2.0,
-    "psar_enable": False,
-    "psar_af0": 0.02,
-    "psar_af_step": 0.02,
-    "psar_max_af": 0.2,
-}
+default_signal_name = simple_name
 
 
 def get_dtype_dict(enable64=True):
@@ -63,7 +38,7 @@ def get_params(
     indicator_enabled={},
     indicator_update2={},
     indicator_enabled2={},
-    signal_name="",
+    signal_name=default_signal_name,
     backtest_params={},
     dtype_dict=default_dtype_dict,
 ):
@@ -139,12 +114,12 @@ def get_indicator_params(
     Raises:
         AssertionError: 如果 update 字典的格式不符合预期。
     """
-    assert indicator_count == len(default_indicators_template.keys()), (
-        f"指标数量不匹配 {indicator_count} {len(default_indicators_template.keys())}"
+    assert indicator_count == len(indicators_spec.keys()), (
+        f"指标数量不匹配 {indicator_count} {len(indicators_spec.keys())}"
     )
 
     id_history = set()
-    for k, v in default_indicators_template.items():
+    for k, v in indicators_spec.items():
         assert v["param_count"] == len(v["default_params"]), (
             f"默认参数数量不对 {v['param_count']} {len(v['default_params'])}"
         )
@@ -153,8 +128,7 @@ def get_indicator_params(
 
     # 初始化默认参数
     default_params = {
-        k: [v["default_params"] for i in range(num)]
-        for k, v in default_indicators_template.items()
+        k: [v["default_params"] for i in range(num)] for k, v in indicators_spec.items()
     }
 
     # 遍历 update 字典并进行验证和更新
@@ -185,13 +159,13 @@ def get_indicator_enabled(update_params={}, dtype_dict=default_dtype_dict):
     params = np.zeros(indicator_count, dtype=dtype_dict["np"]["bool"])
 
     for k, v in update_params.items():
-        params[default_indicators_template[k]["id"]] = bool(v)
+        params[indicators_spec[k]["id"]] = bool(v)
     return ensure_c_contiguous(params)
 
 
 def get_indicator_name(indicator_enabled=[], dtype_dict=default_dtype_dict):
     indicator_name = []
-    for k, v in default_indicators_template.items():
+    for k, v in indicators_spec.items():
         if indicator_enabled[v["id"]]:
             indicator_name.append(v["name"])
     return indicator_name
@@ -199,7 +173,7 @@ def get_indicator_name(indicator_enabled=[], dtype_dict=default_dtype_dict):
 
 def get_indicator_col_name(indicator_enabled=[], dtype_dict=default_dtype_dict):
     indicator_col_name = []
-    for k, v in default_indicators_template.items():
+    for k, v in indicators_spec.items():
         if indicator_enabled[v["id"]]:
             indicator_col_name.append(v["result_name"])
     return indicator_col_name
@@ -220,9 +194,9 @@ def get_signal_params(signal_name="", dtype_dict=default_dtype_dict):
 
 
 def get_backtest_params(num=1, params={}, dtype_dict=default_dtype_dict):
-    check_keys_exist(default_backtest_template, params)
+    check_keys_exist(default_backtest_params, params)
     res = []
-    for k, v in default_backtest_template.items():
+    for k, v in default_backtest_params.items():
         if k in params:
             res.append(params[k])
         else:

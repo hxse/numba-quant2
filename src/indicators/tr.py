@@ -1,27 +1,10 @@
 import numba as nb
 import numpy as np
+from utils.numba_utils import nb_wrapper
 
-
-# from enum import Enum
-
-
-# tr_id = 3
-# tr_name = "tr"
-
-# tr_spec = {
-#     "id": tr_id,
-#     "name": tr_name,
-#     "ori_name": tr_name,
-#     "result_name": ["tr"],
-#     "default_params": [],
-#     "param_count": 0,
-#     "result_count": 1,
-#     "temp_count": 0,
-# }
 
 from utils.numba_params import nb_params
 from utils.data_types import get_numba_data_types
-from utils.numba_utils import nb_wrapper
 
 
 dtype_dict = get_numba_data_types(nb_params.get("enable64", True))

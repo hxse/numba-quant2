@@ -6,7 +6,13 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same, assert_indicator_different
 from utils.config_utils import get_params
 from src.interface import entry_func
-from src.indicators.atr import atr_id, atr_name, atr_spec
+
+
+from src.indicators.indicators_wrapper import indicators_spec
+
+atr_spec = indicators_spec["atr"]
+atr_name = atr_spec["name"]
+atr_id = atr_spec["id"]
 
 
 def test_accuracy(
@@ -40,30 +46,22 @@ def test_accuracy(
             indicator_update={
                 atr_name: [params],
             },
-            indicator_enabled={atr_id: True},
+            indicator_enabled={atr_name: True},
             dtype_dict=dtype_dict,
         )
 
-        (
-            indicator_result,
-            indicator_result2,
-            signal_result,
-            backtest_result,
-            int_temp_array,
-            float_temp_array,
-            bool_temp_array,
-        ) = entry_func(
+        result = entry_func(
             "njit",
             np_data,
             params["indicator_params"],
             params["indicator_enabled"],
             params["signal_params"],
             params["backtest_params"],
-            cache=False,
             dtype_dict=dtype_dict,
+            reuse_outputs=False,
         )
 
-        atr_cpu_result = indicator_result[atr_id][0][:, 0]
+        atr_cpu_result = result["indicator_result"][atr_id][0][:, 0]
 
         pandas_atr_results = ta.atr(
             high_series, low_series, close_series, length=int(atr_period), talib=talib
@@ -72,7 +70,7 @@ def test_accuracy(
         assert_func(
             atr_cpu_result,
             pandas_atr_results,
-            atr_spec["ori_name"],
+            atr_name,
             f"period {atr_period}",
         )
 
@@ -110,4 +108,4 @@ def test_pandas_ta_and_talib_atr_different(
             high_series, low_series, close_series, length=int(atr_period), talib=True
         )
 
-        assert_func(pandas_sma, talib_sma, atr_spec["ori_name"], f"period {atr_period}")
+        assert_func(pandas_sma, talib_sma, atr_name, f"period {atr_period}")

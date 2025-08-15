@@ -1,23 +1,24 @@
 import numba as nb
 import numpy as np
+from utils.numba_utils import nb_wrapper
+from utils.data_types import loop_indicators_signature
+from .indicators_tool import check_bounds
 import math
 
-from utils.data_types import (
-    get_indicator_params_child,
-    get_indicator_result_child,
-    loop_indicators_signature,
-)
-from .indicators_tool import check_bounds
 
-from enum import Enum
+from utils.numba_params import nb_params
+from utils.data_types import get_numba_data_types
 
-psar_id = 4
-psar_name = "psar"
+
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
+
 
 psar_spec = {
-    "id": psar_id,
-    "name": psar_name,
-    "ori_name": psar_name,
+    "name": "psar",
+    "ori_name": "psar",
     "result_name": [
         "psar_long",
         "psar_short",
@@ -29,15 +30,6 @@ psar_spec = {
     "result_count": 4,
     "temp_count": 0,
 }
-
-from utils.numba_params import nb_params
-from utils.data_types import get_numba_data_types
-from utils.numba_utils import nb_wrapper
-
-dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
-nb_int_type = dtype_dict["nb"]["int"]
-nb_float_type = dtype_dict["nb"]["float"]
-nb_bool_type = dtype_dict["nb"]["bool"]
 
 # --- PSAR 状态元组定义 ---
 PsarState = nb.types.Tuple((nb_bool_type, nb_float_type, nb_float_type, nb_float_type))

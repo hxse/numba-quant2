@@ -6,7 +6,13 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same
 from utils.config_utils import get_params
 from src.interface import entry_func
-from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
+
+
+from src.indicators.indicators_wrapper import indicators_spec
+
+bbands_spec = indicators_spec["bbands"]
+bbands_name = bbands_spec["name"]
+bbands_id = bbands_spec["id"]
 
 
 def test_accuracy(
@@ -41,32 +47,24 @@ def test_accuracy(
             indicator_update={
                 bbands_name: [params],
             },
-            indicator_enabled={bbands_id: True},
+            indicator_enabled={bbands_name: True},
             dtype_dict=dtype_dict,
         )
 
-        (
-            indicator_result,
-            indicator_result2,
-            signal_result,
-            backtest_result,
-            int_temp_array,
-            float_temp_array,
-            bool_temp_array,
-        ) = entry_func(
+        result = entry_func(
             "njit",
             np_data,
             params["indicator_params"],
             params["indicator_enabled"],
             params["signal_params"],
             params["backtest_params"],
-            cache=False,
             dtype_dict=dtype_dict,
+            reuse_outputs=False,
         )
 
-        middle_result = indicator_result[bbands_id][0][:, 0]
-        upper_result = indicator_result[bbands_id][0][:, 1]
-        lower_result = indicator_result[bbands_id][0][:, 2]
+        middle_result = result["indicator_result"][bbands_id][0][:, 0]
+        upper_result = result["indicator_result"][bbands_id][0][:, 1]
+        lower_result = result["indicator_result"][bbands_id][0][:, 2]
 
         # Pandas TA 计算布林带
         pandas_bbands = ta.bbands(
@@ -79,21 +77,21 @@ def test_accuracy(
         assert_func(
             middle_result,
             pandas_middle,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
         assert_func(
             upper_result,
             pandas_upper,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
         assert_func(
             lower_result,
             pandas_lower,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
@@ -149,20 +147,20 @@ def test_pandas_ta_and_talib_sma_same(
         assert_func(
             pandas_middle_talib,
             pandas_middle,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
         assert_func(
             pandas_upper_talib,
             pandas_upper,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )
 
         assert_func(
             pandas_lower_talib,
             pandas_lower,
-            bbands_spec["ori_name"],
+            bbands_name,
             f"period {bbands_period} std_mult {bbands_std_mult}",
         )

@@ -1,40 +1,31 @@
 import numba as nb
 import numpy as np
-from utils.data_types import (
-    get_indicator_params_child,
-    get_indicator_result_child,
-    loop_indicators_signature,
-)
+from utils.numba_utils import nb_wrapper
+from utils.data_types import loop_indicators_signature
 from .indicators_tool import check_bounds
-
-import math
 from .sma import calculate_sma
-from enum import Enum
+import math
 
 
-bbands_id = 2
-bbands_name = "bbands"
+from utils.numba_params import nb_params
+from utils.data_types import get_numba_data_types
+
+
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
+
 
 bbands_spec = {
-    "id": bbands_id,  # 指标id，不能跟其他指标重复。
-    "name": bbands_name,  # 指标名
-    "ori_name": bbands_name,
+    "name": "bbands",  # 指标名
+    "ori_name": "bbands",
     "result_name": ["bbands_middle", "bbands_upper", "bbands_lower"],  # 结果数组列名
     "default_params": [14, 2.0],
     "param_count": 2,  # 需要多少参数。
     "result_count": 3,  # 需要多少结果数组。
     "temp_count": 0,  # 该指标需要多少临时数组。
 }
-
-
-from utils.numba_params import nb_params
-from utils.data_types import get_numba_data_types
-from utils.numba_utils import nb_wrapper
-
-dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
-nb_int_type = dtype_dict["nb"]["int"]
-nb_float_type = dtype_dict["nb"]["float"]
-nb_bool_type = dtype_dict["nb"]["bool"]
 
 
 signature = nb.void(

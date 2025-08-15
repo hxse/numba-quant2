@@ -6,7 +6,12 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same, assert_indicator_different
 from utils.config_utils import get_params
 from src.interface import entry_func
-from src.indicators.psar import psar_id, psar_name, psar_spec
+
+from src.indicators.indicators_wrapper import indicators_spec
+
+psar_spec = indicators_spec["psar"]
+psar_name = psar_spec["name"]
+psar_id = psar_spec["id"]
 
 
 def test_accuracy(
@@ -38,33 +43,25 @@ def test_accuracy(
             indicator_update={
                 psar_name: [params],
             },
-            indicator_enabled={psar_id: True},
+            indicator_enabled={psar_name: True},
             dtype_dict=dtype_dict,
         )
 
-        (
-            indicator_result,
-            indicator_result2,
-            signal_result,
-            backtest_result,
-            int_temp_array,
-            float_temp_array,
-            bool_temp_array,
-        ) = entry_func(
+        result = entry_func(
             "njit",
             np_data,
             params["indicator_params"],
             params["indicator_enabled"],
             params["signal_params"],
             params["backtest_params"],
-            cache=False,
             dtype_dict=dtype_dict,
+            reuse_outputs=False,
         )
 
-        psar_long_result = indicator_result[psar_id][0][:, 0]
-        psar_short_result = indicator_result[psar_id][0][:, 1]
-        psar_af_result = indicator_result[psar_id][0][:, 2]
-        psar_reversal_result = indicator_result[psar_id][0][:, 3]
+        psar_long_result = result["indicator_result"][psar_id][0][:, 0]
+        psar_short_result = result["indicator_result"][psar_id][0][:, 1]
+        psar_af_result = result["indicator_result"][psar_id][0][:, 2]
+        psar_reversal_result = result["indicator_result"][psar_id][0][:, 3]
 
         # Pandas TA 计算 PSAR
         pandas_psar = ta.psar(
@@ -85,27 +82,27 @@ def test_accuracy(
         assert_func(
             psar_long_result,
             pandas_psar_long,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
         assert_func(
             psar_short_result,
             pandas_psar_short,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
         assert_func(
             psar_af_result,
             pandas_psar_af,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
         assert_func(
             psar_reversal_result,
             pandas_psar_reversal,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
@@ -170,27 +167,27 @@ def test_pandas_ta_and_talib_sma_same(
         assert_func(
             pandas_psar_long,
             pandas_psar_long_talib,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
         assert_func(
             pandas_psar_short,
             pandas_psar_short_talib,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
         assert_func(
             pandas_psar_af,
             pandas_psar_af_talib,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )
 
         assert_func(
             pandas_psar_reversal,
             pandas_psar_reversal_talib,
-            psar_spec["ori_name"],
+            psar_name,
             f"af0 {af0} af {af} max_af {max_af}",
         )

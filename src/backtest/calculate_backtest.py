@@ -20,6 +20,28 @@ nb_int_type = dtype_dict["nb"]["int"]
 nb_float_type = dtype_dict["nb"]["float"]
 nb_bool_type = dtype_dict["nb"]["bool"]
 
+
+default_backtest_params = {
+    "pct_sl_enable": False,
+    "pct_tp_enable": False,
+    "pct_tsl_enable": False,
+    "pct_sl": 0.02,
+    "pct_tp": 0.02,
+    "pct_tsl": 0.02,
+    "atr_sl_enable": True,
+    "atr_tp_enable": True,
+    "atr_tsl_enable": True,
+    "atr_preiod": 14,
+    "atr_sl_multiplier": 2.0,
+    "atr_tp_multiplier": 2.0,
+    "atr_tsl_multiplier": 2.0,
+    "psar_enable": False,
+    "psar_af0": 0.02,
+    "psar_af_step": 0.02,
+    "psar_max_af": 0.2,
+}
+
+
 backtest_result_name = [
     "position_status",
     "entry_price",

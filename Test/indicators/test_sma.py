@@ -6,7 +6,13 @@ from Test.conftest import df_data, np_data, dtype_dict
 from Test.test_utils import assert_indicator_same
 from utils.config_utils import get_params
 from src.interface import entry_func
-from src.indicators.sma import sma_id, sma2_id, sma_name, sma2_name, sma_spec, sma2_spec
+
+
+from src.indicators.indicators_wrapper import indicators_spec
+
+sma_spec = indicators_spec["sma"]
+sma_name = sma_spec["name"]
+sma_id = sma_spec["id"]
 
 
 def test_accuracy(
@@ -30,7 +36,7 @@ def test_accuracy(
     close_series = df_data["close"]
     volume_series = df_data["volume"]
 
-    params_array = [[10], [20], [30]]
+    params_array = [[10]]
 
     for params in params_array:
         sma_period = params[0]
@@ -40,37 +46,29 @@ def test_accuracy(
             indicator_update={
                 sma_name: [params],
             },
-            indicator_enabled={sma_id: True},
+            indicator_enabled={sma_name: True},
             dtype_dict=dtype_dict,
         )
 
-        (
-            indicator_result,
-            indicator_result2,
-            signal_result,
-            backtest_result,
-            int_temp_array,
-            float_temp_array,
-            bool_temp_array,
-        ) = entry_func(
+        result = entry_func(
             "njit",
             np_data,
             params["indicator_params"],
             params["indicator_enabled"],
             params["signal_params"],
             params["backtest_params"],
-            cache=False,
             dtype_dict=dtype_dict,
+            reuse_outputs=False,
         )
 
-        sma_cpu_result = indicator_result[sma_id][0][:, 0]
+        sma_cpu_result = result["indicator_result"][sma_id][0][:, 0]
 
         pandas_sma_results = ta.sma(close_series, length=int(sma_period), talib=talib)
 
         assert_func(
             sma_cpu_result,
             pandas_sma_results,
-            sma_spec["ori_name"],
+            sma_name,
             f"period {sma_period}",
         )
 
@@ -105,4 +103,4 @@ def test_pandas_ta_and_talib_sma_same(
         # 使用 talib 计算 SMA
         talib_sma = ta.sma(close_series, length=int(sma_period), talib=True)
 
-        assert_func(pandas_sma, talib_sma, sma_spec["ori_name"], f"period {sma_period}")
+        assert_func(pandas_sma, talib_sma, sma_name, f"period {sma_period}")

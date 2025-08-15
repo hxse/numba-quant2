@@ -41,17 +41,6 @@ def main(
     import numba as nb
     from src.interface import entry_func, entry_func_wrapper
     from utils.config_utils import get_dtype_dict, perpare_data, get_params
-    from src.indicators.sma import (
-        sma_id,
-        sma2_id,
-        sma_name,
-        sma2_name,
-        sma_spec,
-        sma2_spec,
-    )
-    from src.indicators.bbands import bbands_id, bbands_name, bbands_spec
-    from src.indicators.atr import atr_id, atr_name, atr_spec
-    from src.indicators.psar import psar_id, psar_name, psar_spec
     from src.signal.simple_template import simple_id, simple_name
     from src.backtest.calculate_backtest import backtest_result_name
     from src.calculate_signals import signal_result_name
@@ -89,18 +78,18 @@ def main(
         params = get_params(
             num=num,
             indicator_update={
-                sma_name: [[14] for i in range(num)],
-                sma2_name: [[50] for i in range(num)],
-                bbands_name: [[20, 2.0] for i in range(num)],
-                atr_name: [[14] for i in range(num)],
-                psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
+                "sma": [[14] for i in range(num)],
+                "sma2": [[50] for i in range(num)],
+                "bbands": [[20, 2.0] for i in range(num)],
+                "atr": [[14] for i in range(num)],
+                "psar": [[0.02, 0.02, 0.2] for i in range(num)],
             },
             indicator_enabled={
-                # sma_name: True,
-                # sma2_name: True,
-                # bbands_name: True,
-                # atr_name: True,
-                # psar_name: True,
+                # "sma": True,
+                # "sma2": True,
+                # "bbands": True,
+                # "atr": True,
+                # "psar": True,
             },
             signal_name="simple",
             backtest_params={
@@ -123,18 +112,18 @@ def main(
                 "psar_max_af": 0.2,
             },
             indicator_update2={
-                sma_name: [[100] for i in range(num)],
-                sma2_name: [[200] for i in range(num)],
-                bbands_name: [[20, 2.0] for i in range(num)],
-                atr_name: [[14] for i in range(num)],
-                psar_name: [[0.02, 0.02, 0.2] for i in range(num)],
+                "sma": [[100] for i in range(num)],
+                "sma2": [[200] for i in range(num)],
+                "bbands": [[20, 2.0] for i in range(num)],
+                "atr": [[14] for i in range(num)],
+                "psar": [[0.02, 0.02, 0.2] for i in range(num)],
             },
             indicator_enabled2={
-                # sma_name: True,
-                # sma2_name: True,
-                # bbands_name: True,
-                # atr_name: True,
-                # psar_name: True,
+                "sma": True,
+                "sma2": True,
+                "bbands": True,
+                "atr": True,
+                "psar": True,
             },
             dtype_dict=dtype_dict,
         )
@@ -153,21 +142,7 @@ def main(
         mode = nb_params.get("mode", "njit")
 
         _func = entry_func_wrapper if task_time else entry_func
-        (
-            tohlcv,
-            tohlcv2,
-            mapping_data,
-            indicator_result,
-            indicator_result2,
-            signal_result,
-            backtest_result,
-            int_temp_array,
-            int_temp_array2,
-            float_temp_array,
-            float_temp_array2,
-            bool_temp_array,
-            bool_temp_array2,
-        ) = _func(
+        result = _func(
             mode,
             np_data,
             params["indicator_params"],
@@ -184,19 +159,19 @@ def main(
         )
 
         if i != 0:
-            print(f"{mode} out_arrays length:", len(backtest_result))
+            print(f"{mode} out_arrays length:", len(result["backtest_result"]))
             # print(f"{mode} indicator_result:", indicator_result)
             # print(f"{mode} indicator_result2:", indicator_result2)
             # print(f"{mode} signal_result:", signal_result)
 
             export_csv(
                 simple_name,
-                [["time", "open", "high", "low", "close", "volume"], tohlcv],
-                [["time", "open", "high", "low", "close", "volume"], tohlcv2],
-                [params["indicator_col_name"], indicator_result],
-                [params["indicator_col_name2"], indicator_result2],
-                [signal_result_name, signal_result],
-                [backtest_result_name, backtest_result],
+                [["time", "open", "high", "low", "close", "volume"], result["tohlcv"]],
+                [["time", "open", "high", "low", "close", "volume"], result["tohlcv2"]],
+                [params["indicator_col_name"], result["indicator_result"]],
+                [params["indicator_col_name2"], result["indicator_result2"]],
+                [signal_result_name, result["signal_result"]],
+                [backtest_result_name, result["backtest_result"]],
                 params["indicator_enabled"],
                 params["indicator_enabled2"],
                 write_csv=True,

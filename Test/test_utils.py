@@ -1,6 +1,8 @@
 import numpy as np
 from typing import Tuple
 
+from src.interface import entry_func
+
 GLOBAL_RTOL = 1e-5
 GLOBAL_ATOL = 1e-8
 

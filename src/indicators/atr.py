@@ -1,41 +1,33 @@
 import numba as nb
 import numpy as np
+from utils.numba_utils import nb_wrapper
+from utils.data_types import loop_indicators_signature
 from .tr import calculate_tr
 from .rma import calculate_rma
-from utils.data_types import (
-    get_indicator_params_child,
-    get_indicator_result_child,
-    loop_indicators_signature,
-)
+
+
+from utils.numba_params import nb_params
+from utils.data_types import get_numba_data_types
+
+
+dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
+nb_int_type = dtype_dict["nb"]["int"]
+nb_float_type = dtype_dict["nb"]["float"]
+nb_bool_type = dtype_dict["nb"]["bool"]
+
 
 from .indicators_tool import check_bounds
 
-from enum import Enum
-
-
-atr_id = 3
-atr_name = "atr"
 
 atr_spec = {
-    "id": atr_id,
-    "name": atr_name,
-    "ori_name": atr_name,
+    "name": "atr",
+    "ori_name": "atr",
     "result_name": ["atr"],
     "default_params": [14],
     "param_count": 1,
     "result_count": 1,
     "temp_count": 1,
 }
-
-
-from utils.numba_params import nb_params
-from utils.data_types import get_numba_data_types
-from utils.numba_utils import nb_wrapper
-
-dtype_dict = get_numba_data_types(nb_params.get("enable64", True))
-nb_int_type = dtype_dict["nb"]["int"]
-nb_float_type = dtype_dict["nb"]["float"]
-nb_bool_type = dtype_dict["nb"]["bool"]
 
 
 signature = nb.void(
